@@ -1,83 +1,71 @@
-
 #using <System.dll>
-#include <Windows.h>
-#include <tchar.h>
-#include <TlHelp32.h>
-#include <stdio.h>
-#include <iostream>
 #include <conio.h>
 
-#include "SMStructs.h"
-#include "SMObject.h"
+#include <SMObject.h>
+#include <smstructs.h>
 
 using namespace System;
-using namespace System::Net::Sockets;
-using namespace System::Net;
-using namespace System::Text;
+using namespace System::Diagnostics;
+using namespace System::Threading;
 
-#define NUM_UNITS 5
+int main() {
+    // Declaration and Initialisation
+    SMObject PMObj(TEXT("ProcessManagement"), sizeof(ProcessManagement));
+    array<String^>^ ModuleList = gcnew array<String^> { "Laser", "Display", "VehicleControl", "GPS", "Camera" };
+    array<int>^ Critical = gcnew array<int>(ModuleList->Length) { 1, 1, 1, 0, 0 };
+    array<Process^>^ ProcessList = gcnew array<Process^>(ModuleList->Length);
 
-bool IsProcessRunning(const char* processName);
-void StartProcesses();
+    // SM creation and access
+    PMObj.SMCreate();
+    PMObj.SMAccess();
 
-//defining start up sequence
-TCHAR Units[10][20] = //
-{
-	TEXT("GPS.exe"),
-	TEXT("Laser.exe"),
-	TEXT("VehicleControl.exe"),
-	TEXT("Display.exe"),
-	TEXT("Camera.exe")
-};
+    ProcessManagement* PMData = (ProcessManagement*)PMObj.pData;
 
-int main()
-{
-	//start all 5 modules
-	StartProcesses();
-	return 0;
+    for (int i = 0; i < ModuleList->Length; i++) {
+        if (Process::GetProcessesByName(ModuleList[i])->Length == 0) { // If there are no current instances of process
+            ProcessList[i] = gcnew Process;
+            ProcessList[i]->StartInfo->WorkingDirectory = "C:\\Users\\Lachy\\Documents\\Uni\\MTRN3500\\UGV_Assignment\\Executables";
+            ProcessList[i]->StartInfo->FileName = ModuleList[i];
+            ProcessList[i]->Start();
+            Console::WriteLine("Started process for module: " + ModuleList[i]);
+        }
+    }
+
+    // Main Loop
+    while (!_kbhit()) {
+        // Check for heartbeats
+            // Iterate through processes
+                // Is the heartbeat bit of process[i] == 1?
+                    // True -> flip bit to 0
+                    // False -> increment heartbeat lost duration counter
+                        // Has the counter exceeded the pre-defined limit for the process?
+                            // True -> Is process[i] critical?
+                                // True -> Shutdown all processes
+                                // False -> Has process[i] exited? (HasExited())
+                                    // True -> Start()
+                                    // False -> Kill(), Start()
+        for (int i = 2; i < 8; i++) { // Iterate through bits of heartbeat ExecFlags
+            unsigned short beat = (PMData->Heartbeat.Status >> i) & 1U; // Get ith bit of heartbeat int
+            if (beat) { // If heartbeat is 1
+                PMData->Heartbeat.Status |= 0UL << i; // Set heartbeat bit to 0
+            }
+            else {
+                // False -> increment heartbeat lost duration counter
+                        // Has the counter exceeded the pre-defined limit for the process?
+                            // True -> Is process[i] critical?
+                                // True -> Shutdown all processes
+                                // False -> Has process[i] exited? (HasExited())
+                                    // True -> Start()
+                                    // False -> Kill(), Start()
+            }
+        }
+        Thread::Sleep(1000);
+    }
+
+    PMData->Shutdown.Status = 0xFF;
+    
+    // Clearing and Shutdown
+    Console::ReadKey();
+
+    return 0;
 }
-
-
-//Is process running function
-bool IsProcessRunning(const char* processName)
-{
-	bool exists = false;
-	PROCESSENTRY32 entry;
-	entry.dwSize = sizeof(PROCESSENTRY32);
-
-	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
-
-	if (Process32First(snapshot, &entry))
-		while (Process32Next(snapshot, &entry))
-			if (!_stricmp(entry.szExeFile, processName))
-				exists = true;
-
-	CloseHandle(snapshot);
-	return exists;
-}
-
-
-void StartProcesses()
-{
-	STARTUPINFO s[10];
-	PROCESS_INFORMATION p[10];
-
-	for (int i = 0; i < NUM_UNITS; i++)
-	{
-		if (!IsProcessRunning(Units[i]))
-		{
-			ZeroMemory(&s[i], sizeof(s[i]));
-			s[i].cb = sizeof(s[i]);
-			ZeroMemory(&p[i], sizeof(p[i]));
-
-			if (!CreateProcess(NULL, Units[i], NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &s[i], &p[i]))
-			{
-				printf("%s failed (%d).\n", Units[i], GetLastError());
-				_getch();
-			}
-			std::cout << "Started: " << Units[i] << std::endl;
-			Sleep(100);
-		}
-	}
-}
-
