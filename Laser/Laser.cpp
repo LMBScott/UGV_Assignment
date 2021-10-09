@@ -20,6 +20,18 @@ int Laser::connect(String^ hostName, int portNumber) {
 	// can use it to read and write
 	Stream = Client->GetStream();
 
+	SendData = gcnew array<unsigned char>(16);
+
+	SendData = System::Text::Encoding::ASCII->GetBytes("z5207471");
+	Stream->Write(SendData, 0, SendData->Length);
+
+	System::Threading::Thread::Sleep(20);
+
+	String^ AskScan = gcnew String("sRN LMDscandata");
+	SendData = Text::Encoding::ASCII->GetBytes(AskScan);
+
+	ReadData = gcnew array<unsigned char>(2500);
+
 	return SUCCESS;
 }
 int Laser::setupSharedMemory() {
@@ -28,7 +40,6 @@ int Laser::setupSharedMemory() {
 	SMObject *LaserObj = new SMObject(TEXT("SM_Laser"), sizeof(SM_Laser));
 
 	// SM creation and access
-	PMObj->SMCreate();
 	PMObj->SMAccess();
 
 	LaserObj->SMCreate();
@@ -40,22 +51,21 @@ int Laser::setupSharedMemory() {
 	return SUCCESS;
 }
 int Laser::getData() {
-	array<unsigned char>^ SendData;
-	SendData = gcnew array<unsigned char>(16);
-	String^ AskScan = gcnew String("sRN LMDscandata");
-	SendData = Text::Encoding::ASCII->GetBytes(AskScan);
+	
 
 	// Write command asking for data
 	Stream->WriteByte(0x02);
 	Stream->Write(SendData, 0, SendData->Length);
 	Stream->WriteByte(0x03);
 
-	System::Threading::Thread::Sleep(10);
+	System::Threading::Thread::Sleep(20);
 
 	// Read the incoming data
 	Stream->Read(ReadData, 0, ReadData->Length);
 
-	Console::WriteLine(ReadData);
+	String^ ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
+
+	Console::WriteLine(ResponseData);
 
 	return SUCCESS;
 }
@@ -85,11 +95,13 @@ int Laser::sendDataToSharedMemory() {
 
 	array<int>^ ConvertedData = gcnew array<int>(ReadData->Length);
 
+	array<wchar_t> ^Sep = gcnew array<wchar_t>(1);
+	Sep[0] = ' ';
+	array <String^>^ ResponseData = System::Text::Encoding::ASCII->GetString(ReadData)->Split(Sep, System::StringSplitOptions::None);
+
 	for (int i = 0; i < ReadData->Length; i++) {
-		ConvertedData[i] = System::Convert::ToInt32(ReadData[i]);
+		ConvertedData[i] = System::Convert::ToInt32(ResponseData[i], 16);
 	}
-	
-	SensorData->pData = &ConvertedData;
 
 	return SUCCESS;
 }
@@ -104,6 +116,8 @@ int Laser::setHeartbeat(bool heartbeat) {
 }
 
 Laser::~Laser() {
+	Stream->Close();
+	Client->Close();
 	delete ProcessManagementData;
 	delete SensorData;
 }

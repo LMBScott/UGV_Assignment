@@ -24,7 +24,7 @@ int main() {
     for (int i = 0; i < ModuleList->Length; i++) {
         if (Process::GetProcessesByName(ModuleList[i])->Length == 0) { // If there are no current instances of process
             ProcessList[i] = gcnew Process;
-            ProcessList[i]->StartInfo->WorkingDirectory = "C:\\Users\\Lachy\\Documents\\Uni\\MTRN3500\\UGV_Assignment\\Executables";
+            ProcessList[i]->StartInfo->WorkingDirectory = "C:\\Users\\z5207471\\source\\repos\\UGV_Assignment\\Executables";
             ProcessList[i]->StartInfo->FileName = ModuleList[i];
             ProcessList[i]->Start();
             Console::WriteLine("Started process for module: " + ModuleList[i]);

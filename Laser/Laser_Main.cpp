@@ -23,8 +23,14 @@ int main() {
 
 	Console::WriteLine("Set up Laser Module shared memory.");
 
-	//String^ IPString = gcnew String(LASER_IP);
-	//LM->connect(IPString, LASER_PORT);
+	String^ IPString = gcnew String(LASER_IP);
+	LM->connect(IPString, LASER_PORT);
+
+	Console::WriteLine("Connected to Laser Server.");
+
+	LM->getData();
+
+	Console::WriteLine("Got laser data.");
 
 	double TimeStamp;
 	__int64 Frequency, Counter;
