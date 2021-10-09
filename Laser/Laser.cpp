@@ -1,37 +1,109 @@
-#using <System.dll>
-#include <Windows.h>
-#include <conio.h>
-#include <UGV_Module.h>
-
+#include "Laser.h"
 #include <SMObject.h>
 #include <smstructs.h>
+#include <string.h>
 
-#include "Laser_module.h"
+#using <mscorlib.dll>
 
-constexpr char* LASER_IP = "192.168.1.200";
-constexpr int LASER_PORT = 23000;
+int Laser::connect(String^ hostName, int portNumber) {
+	// Creat TcpClient object and connect to it
+	Client = gcnew TcpClient(hostName, portNumber);
 
-using namespace System;
-using namespace System::Diagnostics;
-using namespace System::Threading;
+	// Configure connection
+	Client->NoDelay = true;
+	Client->ReceiveTimeout = 500;
+	Client->SendTimeout = 500;
+	Client->ReceiveBufferSize = 1024;
+	Client->SendBufferSize = 1024;
 
-int main() {
-	Laser_module^ LM = gcnew Laser_module;
+	// Get the network stream object associated with client so we 
+	// can use it to read and write
+	Stream = Client->GetStream();
 
-	String^ IPString = gcnew String(LASER_IP);
-	LM->connect(IPString, LASER_PORT);
+	return SUCCESS;
+}
+int Laser::setupSharedMemory() {
+	// Declaration and Initialisation
+	SMObject *PMObj = new SMObject(TEXT("ProcessManagement"), sizeof(ProcessManagement));
+	SMObject *LaserObj = new SMObject(TEXT("SM_Laser"), sizeof(SM_Laser));
 
-	double TimeStamp;
-	__int64 Frequency, Counter;
+	// SM creation and access
+	PMObj->SMCreate();
+	PMObj->SMAccess();
 
-	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
+	LaserObj->SMCreate();
+	LaserObj->SMAccess();
 
-	while (!_kbhit()) {
-		QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
-		TimeStamp = ((double)Counter / (double)Frequency) * 1000;
-		Console::WriteLine("Laser time stamp: {0, 12:F3}, Shutdown: {1, 12:X2}", TimeStamp, LM->getShutdownFlag());
-		Thread::Sleep(25);
+	ProcessManagementData = (SMObject*)PMObj->pData;
+	SensorData = (SMObject*)LaserObj->pData;
+
+	return SUCCESS;
+}
+int Laser::getData() {
+	array<unsigned char>^ SendData;
+	SendData = gcnew array<unsigned char>(16);
+	String^ AskScan = gcnew String("sRN LMDscandata");
+	SendData = Text::Encoding::ASCII->GetBytes(AskScan);
+
+	// Write command asking for data
+	Stream->WriteByte(0x02);
+	Stream->Write(SendData, 0, SendData->Length);
+	Stream->WriteByte(0x03);
+
+	System::Threading::Thread::Sleep(10);
+
+	// Read the incoming data
+	Stream->Read(ReadData, 0, ReadData->Length);
+
+	Console::WriteLine(ReadData);
+
+	return SUCCESS;
+}
+
+int Laser::checkData() {
+	// Check device command
+	
+
+	// Check data string length
+	int expectedLength = 87 + 2 * NUM_DATA_POINTS; // Expected length of data string in bytes
+	
+	try {
+		if (ReadData->Length != expectedLength) {
+			throw ReadData->Length;
+		}
 	}
+	catch (int length) {
+		std::cerr << "Error: Laser data string was of unexpected length (Expected " << expectedLength << " bytes, got " << length << ")." << std::endl;
+	}
+	
 
-	return 0;
+	return SUCCESS;
+}
+
+int Laser::sendDataToSharedMemory() {
+	int dataLength = ReadData->Length;
+
+	array<int>^ ConvertedData = gcnew array<int>(ReadData->Length);
+
+	for (int i = 0; i < ReadData->Length; i++) {
+		ConvertedData[i] = System::Convert::ToInt32(ReadData[i]);
+	}
+	
+	SensorData->pData = &ConvertedData;
+
+	return SUCCESS;
+}
+
+bool Laser::getShutdownFlag() {
+	return ((ProcessManagement*)ProcessManagementData)->Shutdown.Status;
+}
+
+int Laser::setHeartbeat(bool heartbeat) {
+	((ProcessManagement*)ProcessManagementData)->Heartbeat.Flags.Laser |= 1UL;
+	return SUCCESS;
+}
+
+Laser::~Laser() {
+	delete ProcessManagementData;
+	delete SensorData;
 }

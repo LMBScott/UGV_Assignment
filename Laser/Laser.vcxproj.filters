@@ -15,19 +15,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Laser.cpp">
+    <ClCompile Include="Laser_Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SMObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Laser_module.cpp">
+    <ClCompile Include="Laser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Laser_module.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="Laser.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
