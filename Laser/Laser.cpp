@@ -20,19 +20,24 @@ int Laser::connect(String^ hostName, int portNumber) {
 	// can use it to read and write
 	Stream = Client->GetStream();
 
-	SendData = gcnew array<unsigned char>(1024);
+	SendData = gcnew array<unsigned char>(16);
+	ReadData = gcnew array<unsigned char>(2500);
 
-	String^ zID = gcnew String("5207471");
+	// Authenticate user
+	String^ zID = gcnew String("z5207471\n");
 	SendData = System::Text::Encoding::ASCII->GetBytes(zID);
 	Stream->Write(SendData, 0, SendData->Length);
 
-	System::Threading::Thread::Sleep(20);
+	System::Threading::Thread::Sleep(10);
+
+	Stream->Read(ReadData, 0, ReadData->Length);
+
+	String^ ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
+	Console::WriteLine(ResponseData);
 
 	String^ AskScan = gcnew String("sRN LMDscandata");
 	SendData = Text::Encoding::ASCII->GetBytes(AskScan);
-
-	ReadData = gcnew array<unsigned char>(1024);
-
+	
 	return SUCCESS;
 }
 int Laser::setupSharedMemory() {
@@ -52,21 +57,17 @@ int Laser::setupSharedMemory() {
 	return SUCCESS;
 }
 int Laser::getData() {
-	
-
 	// Write command asking for data
 	Stream->WriteByte(0x02);
 	Stream->Write(SendData, 0, SendData->Length);
 	Stream->WriteByte(0x03);
 
-	System::Threading::Thread::Sleep(20);
+	System::Threading::Thread::Sleep(10);
 
 	// Read the incoming data
 	Stream->Read(ReadData, 0, ReadData->Length);
 
 	String^ ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
-
-	Console::WriteLine(ResponseData);
 
 	return SUCCESS;
 }
@@ -107,10 +108,13 @@ int Laser::sendDataToSharedMemory() {
 	array<double>^ RangeX = gcnew array<double>(NumRanges);
 	array<double>^ RangeY = gcnew array<double>(NumRanges);
 
+	SM_Laser* LData = (SM_Laser*)SensorData;
+
 	for (int i = 0; i < NumRanges; i++) {
 		Range[i] = System::Convert::ToInt32(ResponseData[25 + i], 16);
-		RangeX[i] = Range[i] * sin(i * Resolution);
-		RangeY[i] = -Range[i] * cos(i * Resolution);
+		LData->x[i] = Range[i] * sin(i * Resolution);
+		LData->y[i] = -Range[i] * cos(i * Resolution);
+		Console::WriteLine("Point {0, 0:N}: x: {1, 12:F3}, y: {2, 12:F3}", i, LData->x[i], LData->y[i]);
 	}
 
 	return SUCCESS;

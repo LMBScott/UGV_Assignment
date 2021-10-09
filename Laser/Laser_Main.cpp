@@ -28,10 +28,6 @@ int main() {
 
 	Console::WriteLine("Connected to Laser Server.");
 
-	LM->getData();
-
-	Console::WriteLine("Got laser data.");
-
 	double TimeStamp;
 	__int64 Frequency, Counter;
 
@@ -40,7 +36,8 @@ int main() {
 	while (!_kbhit()) {
 		QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
 		TimeStamp = ((double)Counter / (double)Frequency) * 1000;
-		//LM->getData();
+		LM->getData();
+		LM->sendDataToSharedMemory();
 		Console::WriteLine("Laser time stamp: {0, 12:F3}, Shutdown: {1, 12:X2}", TimeStamp, LM->getShutdownFlag());
 		Thread::Sleep(25);
 
