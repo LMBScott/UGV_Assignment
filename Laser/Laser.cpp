@@ -20,9 +20,10 @@ int Laser::connect(String^ hostName, int portNumber) {
 	// can use it to read and write
 	Stream = Client->GetStream();
 
-	SendData = gcnew array<unsigned char>(16);
+	SendData = gcnew array<unsigned char>(1024);
 
-	SendData = System::Text::Encoding::ASCII->GetBytes("z5207471");
+	String^ zID = gcnew String("5207471");
+	SendData = System::Text::Encoding::ASCII->GetBytes(zID);
 	Stream->Write(SendData, 0, SendData->Length);
 
 	System::Threading::Thread::Sleep(20);
@@ -30,7 +31,7 @@ int Laser::connect(String^ hostName, int portNumber) {
 	String^ AskScan = gcnew String("sRN LMDscandata");
 	SendData = Text::Encoding::ASCII->GetBytes(AskScan);
 
-	ReadData = gcnew array<unsigned char>(2500);
+	ReadData = gcnew array<unsigned char>(1024);
 
 	return SUCCESS;
 }
@@ -95,12 +96,21 @@ int Laser::sendDataToSharedMemory() {
 
 	array<int>^ ConvertedData = gcnew array<int>(ReadData->Length);
 
-	array<wchar_t> ^Sep = gcnew array<wchar_t>(1);
-	Sep[0] = ' ';
+	array<wchar_t>^ Sep = { ' ' };
 	array <String^>^ ResponseData = System::Text::Encoding::ASCII->GetString(ReadData)->Split(Sep, System::StringSplitOptions::None);
 
-	for (int i = 0; i < ReadData->Length; i++) {
-		ConvertedData[i] = System::Convert::ToInt32(ResponseData[i], 16);
+	double StartAngle = System::Convert::ToInt32(ResponseData[23], 16);
+	double Resolution = System::Convert::ToInt32(ResponseData[24], 16);
+	int NumRanges = System::Convert::ToInt32(ResponseData[25], 16);
+
+	array<double>^ Range = gcnew array<double>(NumRanges);
+	array<double>^ RangeX = gcnew array<double>(NumRanges);
+	array<double>^ RangeY = gcnew array<double>(NumRanges);
+
+	for (int i = 0; i < NumRanges; i++) {
+		Range[i] = System::Convert::ToInt32(ResponseData[25 + i], 16);
+		RangeX[i] = Range[i] * sin(i * Resolution);
+		RangeY[i] = Range[i] * cos(i * Resolution);
 	}
 
 	return SUCCESS;
