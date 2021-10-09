@@ -110,7 +110,7 @@ int Laser::sendDataToSharedMemory() {
 	for (int i = 0; i < NumRanges; i++) {
 		Range[i] = System::Convert::ToInt32(ResponseData[25 + i], 16);
 		RangeX[i] = Range[i] * sin(i * Resolution);
-		RangeY[i] = Range[i] * cos(i * Resolution);
+		RangeY[i] = -Range[i] * cos(i * Resolution);
 	}
 
 	return SUCCESS;
