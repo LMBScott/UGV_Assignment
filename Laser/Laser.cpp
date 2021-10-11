@@ -91,31 +91,32 @@ int Laser::checkData() {
 }
 
 int Laser::sendDataToSharedMemory() {
-	int dataLength = ReadData->Length;
-
-	array<int>^ ConvertedData = gcnew array<int>(ReadData->Length);
-
 	array<wchar_t>^ Sep = { ' ' };
 	array <String^>^ ResponseData = System::Text::Encoding::ASCII->GetString(ReadData)->Split(Sep, System::StringSplitOptions::None);
 
 	SM_Laser* LData = (SM_Laser*)SensorData;
 
-	double StartAngle = System::Convert::ToInt32(ResponseData[START_ANGLE_INDEX], 16) / ANGLE_DIVISION;
-	double Resolution = System::Convert::ToInt32(ResponseData[RESOLUTION_INDEX], 16) / ANGLE_DIVISION;
+	double StartAngle = System::Convert::ToInt32(ResponseData[START_ANGLE_INDEX], 16) / (double)ANGLE_DIVISION;
+	Console::WriteLine("Start angle:" + StartAngle);
+	double Resolution = System::Convert::ToInt32(ResponseData[RESOLUTION_INDEX], 16) / (double)ANGLE_DIVISION;
+	Console::WriteLine("Resolution:" + Resolution);
 	int NumPoints = System::Convert::ToInt32(ResponseData[NUM_POINTS_INDEX], 16);
 
 	LData->numPoints = NumPoints;
 
-	array<double>^ Range = gcnew array<double>(NumPoints);
-	array<double>^ RangeX = gcnew array<double>(NumPoints);
-	array<double>^ RangeY = gcnew array<double>(NumPoints);
+	Console::WriteLine("Laser data points received:" + LData->numPoints);
 
-	for (int i = 0; i < NumPoints; i++) {
-		Range[i] = System::Convert::ToInt32(ResponseData[DATA_START_INDEX + i], 16);
-		double angle = (StartAngle + i * Resolution) * PI / 180; // Get point angle in radians
-		LData->x[i] = Range[i] * sin(angle);
-		LData->y[i] = -Range[i] * cos(angle);
-		Console::WriteLine("Point {0, 0:N}: x: {1, 12:F3}, y: {2, 12:F3}", i, LData->x[i], LData->y[i]);
+	if (checkData()) {
+		array<double>^ Range = gcnew array<double>(NumPoints);
+
+		for (int i = 0; i < NumPoints; i++) {
+			Range[i] = System::Convert::ToInt32(ResponseData[DATA_START_INDEX + i], 16);
+			//double angle = i * Resolution; // Get point angle in radians
+			double angle = (StartAngle + i * Resolution) * PI / 180; // Get point angle in radians
+			LData->x[i] = Range[i] * sin(angle);
+			LData->y[i] = -Range[i] * cos(angle);
+			Console::WriteLine("Point {0, 0:N}: x: {1, 12:F3}, y: {2, 12:F3}", i, LData->x[i], LData->y[i]);
+		}
 	}
 
 	return SUCCESS;

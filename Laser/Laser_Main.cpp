@@ -23,10 +23,10 @@ int main() {
 
 	Console::WriteLine("Set up Laser Module shared memory.");
 
-	//String^ IPString = gcnew String(LASER_IP);
-	//LM->connect(IPString, LASER_PORT);
+	String^ IPString = gcnew String(LASER_IP);
+	LM->connect(IPString, LASER_PORT);
 
-	//Console::WriteLine("Connected to Laser Server.");
+	Console::WriteLine("Connected to Laser Server.");
 
 	double TimeStamp;
 	__int64 Frequency, Counter, prevCounter;
@@ -43,10 +43,10 @@ int main() {
 
 		TimeStamp = ((double)Counter / (double)Frequency) * 1000;
 
-		//LM->getData();
-		//if (LM->checkData()) {
-		//	LM->sendDataToSharedMemory();
-		//}
+		LM->getData();
+		Console::WriteLine("Got Laser Data");
+		LM->sendDataToSharedMemory();
+		Thread::Sleep(25);
 
 		if (LM->getHeartbeat()) {
 			// Get process management down time in seconds
@@ -61,7 +61,7 @@ int main() {
 			LM->setHeartbeat(true);
 			PMDownCycles = 0;
 		}
-		Console::WriteLine("Laser time stamp: {0, 12:F3}, Shutdown: {1, 12:X2}", TimeStamp, LM->getShutdownFlag());
+		//Console::WriteLine("Laser time stamp: {0, 12:F3}, Shutdown: {1, 12:X2}", TimeStamp, LM->getShutdownFlag());
 		Thread::Sleep(25);
 
 		if (LM->getShutdownFlag()) {

@@ -1,9 +1,11 @@
 #using <System.dll>
 #include <Windows.h>
 #include <conio.h>
+#include <UGV_Module.h>
 
 #include <SMObject.h>
 #include <smstructs.h>
+
 #include "VC.hpp"
 
 using namespace System;
@@ -14,17 +16,13 @@ constexpr char* VC_IP = "192.168.1.200";
 constexpr int VC_PORT = 25000;
 
 int main() {
+	Console::WriteLine("Starting.");
 	VehicleControl^ VC = gcnew VehicleControl;
 	Console::WriteLine("Set up Vehicle Control Module instance.");
 
 	VC->setupSharedMemory();
 
 	Console::WriteLine("Set up Vehicle Control Module shared memory.");
-
-	//String^ IPString = gcnew String(VC_IP);
-	//VC->connect(IPString, VC_PORT);
-
-	//Console::WriteLine("Connected to Vehicle Control Server.");
 
 	double TimeStamp;
 	__int64 Frequency, Counter, prevCounter;
@@ -40,11 +38,6 @@ int main() {
 		QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
 
 		TimeStamp = ((double)Counter / (double)Frequency) * 1000;
-
-		//VC->getData();
-		//if (VC->checkData()) {
-		//	VC->sendDataToSharedMemory();
-		//}
 
 		if (VC->getHeartbeat()) {
 			// Get process management down time in seconds
@@ -67,6 +60,5 @@ int main() {
 			break;
 		}
 	}
-
 	return 0;
 }
