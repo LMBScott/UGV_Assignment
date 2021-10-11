@@ -10,6 +10,9 @@ using namespace System;
 using namespace System::Diagnostics;
 using namespace System::Threading;
 
+#define HOME_WD "C:\\Users\\z5207471\\source\\repos\\UGV_Assignment\\Executables"
+#define REMOTE_WD "C:\\Users\\Lachy\\Documents\\Uni\\MTRN3500\\UGV_Assignment\\Executables"
+
 int main() {
     // Declaration and Initialisation
     SMObject PMObj(TEXT("ProcessManagement"), sizeof(ProcessManagement));
@@ -29,8 +32,7 @@ int main() {
     for (int i = 0; i < ModuleList->Length; i++) {
         if (Process::GetProcessesByName(ModuleList[i])->Length == 0) { // If there are no current instances of process
             ProcessList[i] = gcnew Process;
-            //ProcessList[i]->StartInfo->WorkingDirectory = "C:\\Users\\z5207471\\source\\repos\\UGV_Assignment\\Executables";
-            ProcessList[i]->StartInfo->WorkingDirectory = "C:\\Users\\Lachy\\Documents\\Uni\\MTRN3500\\UGV_Assignment\\Executables";
+            ProcessList[i]->StartInfo->WorkingDirectory = HOME_WD;
             ProcessList[i]->StartInfo->FileName = ModuleList[i];
             ProcessList[i]->Start();
             Console::WriteLine("Started process for module: " + ModuleList[i]);
