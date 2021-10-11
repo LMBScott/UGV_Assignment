@@ -18,6 +18,7 @@ public:
 	int setHeartbeat(bool heartbeat) override;				// Update heartbeat signal for module
 	bool getHeartbeat() override;							// Get heartbeat signal for module
 	int checkHeartbeats(__int64 Counter, __int64 prevCounter, __int64 Frequency);
+	void setShutdown(bool shutdown);
 	~PM_Module();
 protected:
 	array<String^>^ ModuleList;

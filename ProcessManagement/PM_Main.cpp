@@ -32,5 +32,7 @@ int main() {
         Thread::Sleep(100);
     }
 
+    PM->setShutdown(true);
+
     return 0;
 }

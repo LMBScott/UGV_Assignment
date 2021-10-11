@@ -28,7 +28,7 @@ int PM_Module::setupSharedMemory() {
 int PM_Module::setupDataStructures() {
 	ModuleList = gcnew array<String^> { "Laser", "VehicleControl", "GPS", "Display", "Camera" };
 	MaxWait = gcnew array<int>(ModuleList->Length) { 5, 5, 3, 3, 5 };
-	Critical = gcnew array<int>(ModuleList->Length) { 1, 0, 0, 1, 0 };
+	Critical = gcnew array<int>(ModuleList->Length) { 1, 0, 1, 1, 0 };
 	ProcessList = gcnew array<Process^>(ModuleList->Length);
 
 	ProcessManagement* PMData = (ProcessManagement*)ProcessManagementData;
@@ -42,7 +42,7 @@ int PM_Module::startProcesses() {
 	for (int i = 0; i < ModuleList->Length; i++) {
 		if (Process::GetProcessesByName(ModuleList[i])->Length == 0) { // If there are no current instances of process
 			ProcessList[i] = gcnew Process;
-			ProcessList[i]->StartInfo->WorkingDirectory = REMOTE_WD;
+			ProcessList[i]->StartInfo->WorkingDirectory = HOME_WD;
 			ProcessList[i]->StartInfo->FileName = ModuleList[i];
 			ProcessList[i]->Start();
 			Console::WriteLine("Started process for module: " + ModuleList[i]);
@@ -114,6 +114,11 @@ int PM_Module::checkHeartbeats(__int64 Counter, __int64 prevCounter, __int64 Fre
 	}
 
 	return SUCCESS;
+}
+
+void PM_Module::setShutdown(bool shutdown) {
+	ProcessManagement* PMData = (ProcessManagement*)ProcessManagementData;
+	PMData->Shutdown.Status = shutdown ? 0xFF : 0x00;
 }
 
 PM_Module::~PM_Module() {
