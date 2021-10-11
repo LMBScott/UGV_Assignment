@@ -2,8 +2,6 @@
 
 #include <UGV_module.h>
 
-constexpr int NUM_DATA_POINTS = 361;
-
 struct LaserData {
 
 };
@@ -17,6 +15,7 @@ public:
 	int sendDataToSharedMemory() override;					// Save Data in shared memory structures
 	bool getShutdownFlag() override;						// Get Shutdown signal for module, from Process Management SM
 	int setHeartbeat(bool heartbeat) override;				// Update heartbeat signal for module
+	bool getHeartbeat() override;							// Get heartbeat signal for module
 	~Laser();
 protected:
 };

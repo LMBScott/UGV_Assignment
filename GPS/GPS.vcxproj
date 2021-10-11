@@ -121,7 +121,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="GPS.h" />
+    <ClInclude Include="GPS.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GPS.cpp" />

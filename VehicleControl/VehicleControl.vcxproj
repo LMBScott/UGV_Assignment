@@ -117,7 +117,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="SMObject.cpp" />
-    <ClCompile Include="VehicleControl.cpp" />
+    <ClCompile Include="VC.cpp" />
+    <ClCompile Include="VC_Main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="VC.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

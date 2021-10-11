@@ -1,46 +1,69 @@
 #using <System.dll>
-#include <zmq.hpp>
 #include <Windows.h>
 #include <conio.h>
-#include "GPS.h"
+#include "GPS.hpp"
 #include <SMObject.h>
 #include <smstructs.h>
+#include <bitset>
+
+constexpr char* GPS_IP = "192.168.1.200";
+constexpr int GPS_PORT = 24000;
 
 using namespace System;
 using namespace System::Diagnostics;
 using namespace System::Threading;
 
 int main() {
-	// Declaration and Initialisation
-	SMObject PMObj(TEXT("ProcessManagement"), sizeof(ProcessManagement));
-	SMObject GPSObj(TEXT("SM_GPS"), sizeof(SM_GPS));
+	GPS^ GM = gcnew GPS;
+	Console::WriteLine("Set up GPS Module instance.");
+
+	GM->setupSharedMemory();
+
+	Console::WriteLine("Set up GPS Module shared memory.");
+
+	//String^ IPString = gcnew String(GPS_IP);
+	//GM->connect(IPString, GPS_PORT);
+
+	//Console::WriteLine("Connected to GPS Server.");
 
 	double TimeStamp;
-	__int64 Frequency, Counter;
-	int Shutdown = 0x00;
+	__int64 Frequency, Counter, prevCounter;
 
 	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
+	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
+	prevCounter = Counter;
 
-	// SM creation and access
-	PMObj.SMCreate();
-	PMObj.SMAccess();
-	ProcessManagement* PMData = (ProcessManagement*)PMObj.pData;
-	SM_GPS* GPSData = (SM_GPS*)GPSObj.pData;
+	long int PMDownCycles = 0;
 
-	zmq::context_t context(1);
-	zmq::socket_t subscriber(context, ZMQ_SUB);
-
-	//Socket to talk to server
-	subscriber.connect("tcp://192.168.1.200:24000");
-	subscriber.setsockopt(ZMQ_SUBSCRIBE, "", 0);
-
-	while (1) {
+	while (!_kbhit()) {
+		prevCounter = Counter;
 		QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
+
 		TimeStamp = ((double)Counter / (double)Frequency) * 1000;
-		Console::WriteLine("GPS time stamp: {0, 12:F3}, Shutdown: {1, 12:X2}", TimeStamp, Shutdown);
+
+		//GM->getData();
+		//if (GM->checkData()) {
+		//	GM->sendDataToSharedMemory();
+		//}
+
+		if (GM->getHeartbeat()) {
+			// Get process management down time in seconds
+			long int PMLifeTime = PMDownCycles / (double)Frequency;
+
+			if (PMLifeTime >= MAX_PM_WAIT) { // Check if proc. man. has been unresponsive for too long
+				break;
+			}
+
+			PMDownCycles += Counter - prevCounter;
+		}
+		else {
+			GM->setHeartbeat(true);
+			PMDownCycles = 0;
+		}
+		Console::WriteLine("GPS time stamp: {0, 12:F3}, Shutdown: {1, 12:X2}", TimeStamp, GM->getShutdownFlag());
 		Thread::Sleep(25);
 
-		if (PMData->Shutdown.Status || _kbhit()) {
+		if (GM->getShutdownFlag()) {
 			break;
 		}
 	}

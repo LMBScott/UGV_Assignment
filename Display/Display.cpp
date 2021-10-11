@@ -1,9 +1,9 @@
 #using <System.dll>
-#include "GPS.hpp"
+#include "Display.hpp"
 #include <SMObject.h>
 #include <smstructs.h>
 
-int GPS::connect(String^ hostName, int portNumber)
+int Display::connect(String^ hostName, int portNumber)
 {
 	// Creat TcpClient object and connect to it
 	Client = gcnew TcpClient(hostName, portNumber);
@@ -40,7 +40,7 @@ int GPS::connect(String^ hostName, int portNumber)
 	return SUCCESS;
 }
 
-int GPS::setupSharedMemory()
+int Display::setupSharedMemory()
 {
 	// Declaration and Initialisation
 	SMObject* PMObj = new SMObject(TEXT("ProcessManagement"), sizeof(ProcessManagement));
@@ -58,7 +58,7 @@ int GPS::setupSharedMemory()
 	return SUCCESS;
 }
 
-int GPS::getData()
+int Display::getData()
 {
 	// Write command asking for data
 	Stream->WriteByte(0x02);
@@ -75,13 +75,13 @@ int GPS::getData()
 	return SUCCESS;
 }
 
-int GPS::checkData()
+int Display::checkData()
 {
 	// YOUR CODE HERE
 	return 1;
 }
 
-int GPS::sendDataToSharedMemory()
+int Display::sendDataToSharedMemory()
 {
 	SM_GPS GPSStruct;
 	unsigned char* BytePtr = (unsigned char*)&GPSStruct;
@@ -92,59 +92,29 @@ int GPS::sendDataToSharedMemory()
 	return 1;
 }
 
-bool GPS::getShutdownFlag()
+bool Display::getShutdownFlag()
 {
 	ProcessManagement* PMData = (ProcessManagement*)ProcessManagementData;
-	return PMData->Shutdown.Flags.GPS;
+	return PMData->Shutdown.Flags.OpenGL;
 }
 
-int GPS::setHeartbeat(bool heartbeat)
+int Display::setHeartbeat(bool heartbeat)
 {
 	ProcessManagement* PMData = (ProcessManagement*)ProcessManagementData;
-	PMData->Heartbeat.Flags.GPS = heartbeat;
+	PMData->Heartbeat.Flags.OpenGL = heartbeat;
 
 	return SUCCESS;
 }
 
-bool GPS::getHeartbeat() {
+bool Display::getHeartbeat() {
 	ProcessManagement* PMData = (ProcessManagement*)ProcessManagementData;
-	return PMData->Heartbeat.Flags.GPS;
+	return PMData->Heartbeat.Flags.OpenGL;
 }
 
-GPS::~GPS()
+Display::~Display()
 {
 	Stream->Close();
 	Client->Close();
 	delete ProcessManagementData;
 	delete SensorData;
-}
-
-unsigned long CRC32Value(int i)
-{
-	int j;
-	unsigned long ulCRC;
-	ulCRC = i;
-	for (j = 8; j > 0; j--)
-	{
-		if (ulCRC & 1)
-			ulCRC = (ulCRC >> 1) ^ CRC32_POLYNOMIAL;
-		else
-			ulCRC >>= 1;
-	}
-	return ulCRC;
-}
-
-unsigned long CalculateBlockCRC32(unsigned long ulCount, /* Number of bytes in the data block */
-	unsigned char* ucBuffer) /* Data block */
-{
-	unsigned long ulTemp1;
-	unsigned long ulTemp2;
-	unsigned long ulCRC = 0;
-	while (ulCount-- != 0)
-	{
-		ulTemp1 = (ulCRC >> 8) & 0x00FFFFFFL;
-		ulTemp2 = CRC32Value(((int)ulCRC ^ *ucBuffer++) & 0xff);
-		ulCRC = ulTemp1 ^ ulTemp2;
-	}
-	return(ulCRC);
 }

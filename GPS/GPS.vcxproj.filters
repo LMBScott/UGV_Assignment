@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GPS.h">
+    <ClInclude Include="GPS.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

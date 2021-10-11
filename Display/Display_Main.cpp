@@ -38,6 +38,11 @@
 #include "Messages.hpp"
 #include "HUD.hpp"
 
+#include "SMStructs.h"
+#include "SMFcn.h"
+#include "SMObject.h"
+#include "Display.hpp"
+
 void display();
 void reshape(int width, int height);
 void idle();
@@ -63,6 +68,11 @@ int prev_mouse_y = -1;
 Vehicle * vehicle = NULL;
 double speed = 0;
 double steering = 0;
+
+SMObject* PMObj;
+ProcessManagement* PMData;
+
+__int64 Frequency, Counter, prevCounter, PMDownCycles;
 
 //int _tmain(int argc, _TCHAR* argv[]) {
 int main(int argc, char ** argv) {
@@ -100,6 +110,18 @@ int main(int argc, char ** argv) {
 	// -------------------------------------------------------------------------
 	vehicle = new MyVehicle();
 
+	PMObj = new SMObject(TEXT("ProcessManagement"), sizeof(ProcessManagement));
+
+	PMObj->SMAccess();
+
+	PMData = (ProcessManagement*)PMObj->pData;
+
+	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
+	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
+
+	prevCounter = Counter;
+
+	PMDownCycles = 0;
 
 	glutMainLoop();
 
@@ -174,6 +196,27 @@ double getTime()
 }
 
 void idle() {
+	prevCounter = Counter;
+	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
+
+	if (PMData->Heartbeat.Flags.OpenGL) {
+		// Get process management down time in seconds
+		__int64 PMLifeTime = PMDownCycles / Frequency;
+
+		if (PMLifeTime >= MAX_PM_WAIT) { // Check if proc. man. has been unresponsive for too long
+			exit(0);
+		}
+
+		PMDownCycles += Counter - prevCounter;
+	}
+	else {
+		PMData->Heartbeat.Flags.OpenGL = 1;
+		PMDownCycles = 0;
+	}
+
+	if (PMData->Shutdown.Flags.OpenGL) {
+		exit(0);
+	}
 
 	if (KeyManager::get()->isAsciiKeyPressed('a')) {
 		Camera::get()->strafeLeft();
@@ -301,5 +344,3 @@ void motion(int x, int y) {
 	prev_mouse_x = x;
 	prev_mouse_y = y;
 };
-
-

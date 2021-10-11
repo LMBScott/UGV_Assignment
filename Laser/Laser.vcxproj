@@ -127,7 +127,7 @@
     <ClCompile Include="SMObject.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Laser.h" />
+    <ClInclude Include="Laser.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

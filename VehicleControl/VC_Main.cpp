@@ -1,32 +1,30 @@
 #using <System.dll>
 #include <Windows.h>
 #include <conio.h>
-#include <UGV_Module.h>
 
 #include <SMObject.h>
 #include <smstructs.h>
-
-#include "Laser.hpp"
-
-constexpr char* LASER_IP = "192.168.1.200";
-constexpr int LASER_PORT = 23000;
+#include "VC.hpp"
 
 using namespace System;
 using namespace System::Diagnostics;
 using namespace System::Threading;
 
+constexpr char* VC_IP = "192.168.1.200";
+constexpr int VC_PORT = 25000;
+
 int main() {
-	Laser^ LM = gcnew Laser;
-	Console::WriteLine("Set up Laser Module instance.");
+	VehicleControl^ VC = gcnew VehicleControl;
+	Console::WriteLine("Set up Vehicle Control Module instance.");
 
-	LM->setupSharedMemory();
+	VC->setupSharedMemory();
 
-	Console::WriteLine("Set up Laser Module shared memory.");
+	Console::WriteLine("Set up Vehicle Control Module shared memory.");
 
-	//String^ IPString = gcnew String(LASER_IP);
-	//LM->connect(IPString, LASER_PORT);
+	//String^ IPString = gcnew String(VC_IP);
+	//VC->connect(IPString, VC_PORT);
 
-	//Console::WriteLine("Connected to Laser Server.");
+	//Console::WriteLine("Connected to Vehicle Control Server.");
 
 	double TimeStamp;
 	__int64 Frequency, Counter, prevCounter;
@@ -43,12 +41,12 @@ int main() {
 
 		TimeStamp = ((double)Counter / (double)Frequency) * 1000;
 
-		//LM->getData();
-		//if (LM->checkData()) {
-		//	LM->sendDataToSharedMemory();
+		//VC->getData();
+		//if (VC->checkData()) {
+		//	VC->sendDataToSharedMemory();
 		//}
 
-		if (LM->getHeartbeat()) {
+		if (VC->getHeartbeat()) {
 			// Get process management down time in seconds
 			long int PMLifeTime = PMDownCycles / (double)Frequency;
 
@@ -57,14 +55,15 @@ int main() {
 			}
 
 			PMDownCycles += Counter - prevCounter;
-		} else {
-			LM->setHeartbeat(true);
+		}
+		else {
+			VC->setHeartbeat(true);
 			PMDownCycles = 0;
 		}
-		Console::WriteLine("Laser time stamp: {0, 12:F3}, Shutdown: {1, 12:X2}", TimeStamp, LM->getShutdownFlag());
+		Console::WriteLine("Vehicle Control time stamp: {0, 12:F3}, Shutdown: {1, 12:X2}", TimeStamp, VC->getShutdownFlag());
 		Thread::Sleep(25);
 
-		if (LM->getShutdownFlag()) {
+		if (VC->getShutdownFlag()) {
 			break;
 		}
 	}

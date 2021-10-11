@@ -17,6 +17,7 @@ you see fit.
 #define SUCCESS 0
 #define ERR_NO_DATA 1
 #define ERR_INVALID_DATA 2
+#define MAX_PM_WAIT 3
 
 #include <iostream>
 #include <SMObject.h>
@@ -38,6 +39,7 @@ ref class UGV_module
 		virtual int sendDataToSharedMemory() = 0;					// Save Data in shared memory structures
 		virtual bool getShutdownFlag() = 0;							// Get Shutdown signal for module, from Process Management SM
 		virtual int setHeartbeat(bool heartbeat) = 0;				// Update heartbeat signal for module
+		virtual bool getHeartbeat() = 0;							// Get heartbeat signal for module
 
 		void getError()
 		{

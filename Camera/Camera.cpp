@@ -1,99 +1,120 @@
-#include <zmq.hpp>
-#include <Windows.h>
+#using <System.dll>
+#include "Camera.hpp"
+#include <SMObject.h>
+#include <smstructs.h>
 
-#include "SMStructs.h"
-#include "SMFcn.h"
-#include "SMObject.h"
-
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glut.h>
-
-#include <turbojpeg.h>
-
-void display();
-void idle();
-
-GLuint tex;
-
-//ZMQ settings
-zmq::context_t context(1);
-zmq::socket_t subscriber(context, ZMQ_SUB);
-
-int main(int argc, char** argv)
+int Camera::connect(String^ hostName, int portNumber)
 {
-	//Define window size
-	const int WINDOW_WIDTH = 800;
-	const int WINDOW_HEIGHT = 600;
+	// Creat TcpClient object and connect to it
+	Client = gcnew TcpClient(hostName, portNumber);
 
-	//GL Window setup
-	glutInit(&argc, (char**)(argv));
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
-	glutInitWindowPosition(0, 0);
-	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-	glutCreateWindow("MTRN3500 - Camera");
+	// Configure connection
+	Client->NoDelay = true;
+	Client->ReceiveTimeout = 500;
+	Client->SendTimeout = 500;
+	Client->ReceiveBufferSize = 1024;
+	Client->SendBufferSize = 1024;
 
-	glutDisplayFunc(display);
-	glutIdleFunc(idle);
-	glGenTextures(1, &tex);
+	// Get the network stream object associated with client so we 
+	// can use it to read and write
+	Stream = Client->GetStream();
 
-	//Socket to talk to server
-	subscriber.connect("tcp://192.168.1.200:26000");
-	subscriber.setsockopt(ZMQ_SUBSCRIBE, "", 0);
+	SendData = gcnew array<unsigned char>(16);
+	ReadData = gcnew array<unsigned char>(2500);
 
-	glutMainLoop();
+	// Authenticate user
+	String^ zID = gcnew String("z5207471\n");
+	SendData = System::Text::Encoding::ASCII->GetBytes(zID);
+	Stream->Write(SendData, 0, SendData->Length);
 
+	System::Threading::Thread::Sleep(10);
+
+	Stream->Read(ReadData, 0, ReadData->Length);
+
+	String^ ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
+	Console::WriteLine(ResponseData);
+
+	String^ AskScan = gcnew String("sRN LMDscandata");
+	SendData = Text::Encoding::ASCII->GetBytes(AskScan);
+
+	return SUCCESS;
+}
+
+int Camera::setupSharedMemory()
+{
+	// Declaration and Initialisation
+	SMObject* PMObj = new SMObject(TEXT("ProcessManagement"), sizeof(ProcessManagement));
+	SMObject* GPSObj = new SMObject(TEXT("SM_GPS"), sizeof(SM_GPS));
+
+	// SM creation and access
+	PMObj->SMAccess();
+
+	GPSObj->SMCreate();
+	GPSObj->SMAccess();
+
+	ProcessManagementData = (SMObject*)PMObj->pData;
+	SensorData = (SMObject*)GPSObj->pData;
+
+	return SUCCESS;
+}
+
+int Camera::getData()
+{
+	// Write command asking for data
+	Stream->WriteByte(0x02);
+	Stream->Write(SendData, 0, SendData->Length);
+	Stream->WriteByte(0x03);
+
+	System::Threading::Thread::Sleep(10);
+
+	// Read the incoming data
+	Stream->Read(ReadData, 0, ReadData->Length);
+
+	String^ ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
+
+	return SUCCESS;
+}
+
+int Camera::checkData()
+{
+	// YOUR CODE HERE
 	return 1;
 }
 
-
-void display()
+int Camera::sendDataToSharedMemory()
 {
-	//Set camera as gl texture
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, tex);
+	SM_GPS GPSStruct;
+	unsigned char* BytePtr = (unsigned char*)&GPSStruct;
 
-	//Map Camera to window
-	glBegin(GL_QUADS);
-	glTexCoord2f(0, 1); glVertex2f(-1, -1);
-	glTexCoord2f(1, 1); glVertex2f(1, -1);
-	glTexCoord2f(1, 0); glVertex2f(1, 1);
-	glTexCoord2f(0, 0); glVertex2f(-1, 1);
-	glEnd();
-	glutSwapBuffers();
-}
-void idle()
-{
-
-	//receive from zmq
-	zmq::message_t update;
-	if (subscriber.recv(&update, ZMQ_NOBLOCK))
-	{
-		//Receive camera data
-		long unsigned int _jpegSize = update.size();
-		std::cout << "received " << _jpegSize << " bytes of data\n";
-		unsigned char* _compressedImage = static_cast<unsigned char*>(update.data());
-		int jpegSubsamp = 0, width = 0, height = 0;
-
-		//JPEG Decompression
-		tjhandle _jpegDecompressor = tjInitDecompress();
-		tjDecompressHeader2(_jpegDecompressor, _compressedImage, _jpegSize, &width, &height, &jpegSubsamp);
-		unsigned char* buffer = new unsigned char[width * height * 3]; //!< will contain the decompressed image
-		printf("Dimensions:  %d   %d\n", height, width);
-		tjDecompress2(_jpegDecompressor, _compressedImage, _jpegSize, buffer, width, 0/*pitch*/, height, TJPF_RGB, TJFLAG_FASTDCT);
-		tjDestroy(_jpegDecompressor);
-
-		//load texture
-		glBindTexture(GL_TEXTURE_2D, tex);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, buffer);
-		delete[] buffer;
+	for (int i = 0; i < sizeof(SM_GPS); i++) {
+		*(BytePtr + i) = ReadData[i];
 	}
-
-	display();
+	return 1;
 }
 
+bool Camera::getShutdownFlag()
+{
+	ProcessManagement* PMData = (ProcessManagement*)ProcessManagementData;
+	return PMData->Shutdown.Flags.Camera;
+}
+
+int Camera::setHeartbeat(bool heartbeat)
+{
+	ProcessManagement* PMData = (ProcessManagement*)ProcessManagementData;
+	PMData->Heartbeat.Flags.Camera = heartbeat;
+
+	return SUCCESS;
+}
+
+bool Camera::getHeartbeat() {
+	ProcessManagement* PMData = (ProcessManagement*)ProcessManagementData;
+	return PMData->Heartbeat.Flags.Camera;
+}
+
+Camera::~Camera()
+{
+	Stream->Close();
+	Client->Close();
+	delete ProcessManagementData;
+	delete SensorData;
+}

@@ -122,6 +122,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp" />
+    <ClInclude Include="Display.hpp" />
     <ClInclude Include="Frustum.hpp" />
     <ClInclude Include="Ground.hpp" />
     <ClInclude Include="HUD.hpp" />
@@ -135,11 +136,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Display.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="Ground.cpp" />
     <ClCompile Include="HUD.cpp" />
     <ClCompile Include="KeyManager.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Display_Main.cpp" />
     <ClCompile Include="Messages.cpp" />
     <ClCompile Include="MyVehicle.cpp" />
     <ClCompile Include="Quaternion.cpp" />

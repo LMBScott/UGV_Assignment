@@ -1,19 +1,11 @@
-#include "Laser.hpp"
+#include "VC.hpp"
 #include <SMObject.h>
 #include <smstructs.h>
 #include <string.h>
 
 #using <mscorlib.dll>
 
-#define START_ANGLE_INDEX 23
-#define RESOLUTION_INDEX 24
-#define NUM_POINTS_INDEX 25
-#define DATA_START_INDEX 26
-
-#define ANGLE_DIVISION 10000
-#define PI 3.1415926536
-
-int Laser::connect(String^ hostName, int portNumber) {
+int VehicleControl::connect(String^ hostName, int portNumber) {
 	// Creat TcpClient object and connect to it
 	Client = gcnew TcpClient(hostName, portNumber);
 
@@ -45,26 +37,26 @@ int Laser::connect(String^ hostName, int portNumber) {
 
 	String^ AskScan = gcnew String("sRN LMDscandata");
 	SendData = Text::Encoding::ASCII->GetBytes(AskScan);
-	
+
 	return SUCCESS;
 }
-int Laser::setupSharedMemory() {
+int VehicleControl::setupSharedMemory() {
 	// Declaration and Initialisation
-	SMObject *PMObj = new SMObject(TEXT("ProcessManagement"), sizeof(ProcessManagement));
-	SMObject *LaserObj = new SMObject(TEXT("SM_Laser"), sizeof(SM_Laser));
+	SMObject* PMObj = new SMObject(TEXT("ProcessManagement"), sizeof(ProcessManagement));
+	SMObject* VCObj = new SMObject(TEXT("SM_VehicleControl"), sizeof(SM_VehicleControl));
 
 	// SM creation and access
 	PMObj->SMAccess();
 
-	LaserObj->SMCreate();
-	LaserObj->SMAccess();
+	VCObj->SMCreate();
+	VCObj->SMAccess();
 
 	ProcessManagementData = (SMObject*)PMObj->pData;
-	SensorData = (SMObject*)LaserObj->pData;
+	SensorData = (SMObject*)VCObj->pData;
 
 	return SUCCESS;
 }
-int Laser::getData() {
+int VehicleControl::getData() {
 	// Write command asking for data
 	Stream->WriteByte(0x02);
 	Stream->Write(SendData, 0, SendData->Length);
@@ -80,7 +72,7 @@ int Laser::getData() {
 	return SUCCESS;
 }
 
-int Laser::checkData() {
+int VehicleControl::checkData() {
 	SM_Laser* LData = (SM_Laser*)SensorData;
 
 	if (LData != NULL) {
@@ -90,7 +82,7 @@ int Laser::checkData() {
 	return 0;
 }
 
-int Laser::sendDataToSharedMemory() {
+int VehicleControl::sendDataToSharedMemory() {
 	int dataLength = ReadData->Length;
 
 	array<int>^ ConvertedData = gcnew array<int>(ReadData->Length);
@@ -100,9 +92,9 @@ int Laser::sendDataToSharedMemory() {
 
 	SM_Laser* LData = (SM_Laser*)SensorData;
 
-	double StartAngle = System::Convert::ToInt32(ResponseData[START_ANGLE_INDEX], 16) / ANGLE_DIVISION;
-	double Resolution = System::Convert::ToInt32(ResponseData[RESOLUTION_INDEX], 16) / ANGLE_DIVISION;
-	int NumPoints = System::Convert::ToInt32(ResponseData[NUM_POINTS_INDEX], 16);
+	double StartAngle = System::Convert::ToInt32(ResponseData[23], 16);
+	double Resolution = System::Convert::ToInt32(ResponseData[24], 16);
+	int NumPoints = System::Convert::ToInt32(ResponseData[25], 16);
 
 	LData->numPoints = NumPoints;
 
@@ -111,34 +103,33 @@ int Laser::sendDataToSharedMemory() {
 	array<double>^ RangeY = gcnew array<double>(NumPoints);
 
 	for (int i = 0; i < NumPoints; i++) {
-		Range[i] = System::Convert::ToInt32(ResponseData[DATA_START_INDEX + i], 16);
-		double angle = (StartAngle + i * Resolution) * PI / 180; // Get point angle in radians
-		LData->x[i] = Range[i] * sin(angle);
-		LData->y[i] = -Range[i] * cos(angle);
+		Range[i] = System::Convert::ToInt32(ResponseData[25 + i], 16);
+		LData->x[i] = Range[i] * sin(i * Resolution);
+		LData->y[i] = -Range[i] * cos(i * Resolution);
 		Console::WriteLine("Point {0, 0:N}: x: {1, 12:F3}, y: {2, 12:F3}", i, LData->x[i], LData->y[i]);
 	}
 
 	return SUCCESS;
 }
 
-bool Laser::getShutdownFlag() {
+bool VehicleControl::getShutdownFlag() {
 	ProcessManagement* PMData = (ProcessManagement*)ProcessManagementData;
-	return PMData->Shutdown.Flags.Laser;
+	return PMData->Shutdown.Flags.VehicleControl;
 }
 
-int Laser::setHeartbeat(bool heartbeat) {
+int VehicleControl::setHeartbeat(bool heartbeat) {
 	ProcessManagement* PMData = (ProcessManagement*)ProcessManagementData;
-	PMData->Heartbeat.Flags.Laser = heartbeat;
+	PMData->Heartbeat.Flags.VehicleControl = heartbeat;
 
 	return SUCCESS;
 }
 
-bool Laser::getHeartbeat() {
+bool VehicleControl::getHeartbeat() {
 	ProcessManagement* PMData = (ProcessManagement*)ProcessManagementData;
-	return PMData->Heartbeat.Flags.Laser;
+	return PMData->Heartbeat.Flags.VehicleControl;
 }
 
-Laser::~Laser() {
+VehicleControl::~VehicleControl() {
 	Stream->Close();
 	Client->Close();
 	delete ProcessManagementData;

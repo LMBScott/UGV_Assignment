@@ -18,9 +18,11 @@ using namespace System::Text;
 
 
 #define STANDARD_LASER_LENGTH 361
+#define NUM_MODULES 5
 
 struct SM_Laser
 {
+	int numPoints;
 	double x[STANDARD_LASER_LENGTH];
 	double y[STANDARD_LASER_LENGTH];
 };
@@ -33,9 +35,13 @@ struct SM_VehicleControl
 
 struct SM_GPS
 {
-	double northing;
-	double easting;
-	double height;
+	unsigned int Header; // 0xAA 0x4 0x12 0x1C
+	unsigned char DiscardLot1[40];
+	double Northing;
+	double Easting;
+	double Height;
+	unsigned char DiscardLot2[40];
+	unsigned int CRC;
 };
 
 struct UnitFlags
@@ -60,6 +66,7 @@ struct ProcessManagement
 	ExecFlags Heartbeat;
 	ExecFlags Shutdown;
 	long int LifeCounter;
+	long int LifeCounters[NUM_MODULES];
 };
 
 #define NONCRITICALMASK 0xff	//0 011 0000
