@@ -111,7 +111,6 @@ int Laser::sendDataToSharedMemory() {
 
 		for (int i = 0; i < NumPoints; i++) {
 			Range[i] = System::Convert::ToInt32(ResponseData[DATA_START_INDEX + i], 16);
-			//double angle = i * Resolution; // Get point angle in radians
 			double angle = (StartAngle + i * Resolution) * PI / 180; // Get point angle in radians
 			LData->x[i] = Range[i] * sin(angle);
 			LData->y[i] = -Range[i] * cos(angle);
