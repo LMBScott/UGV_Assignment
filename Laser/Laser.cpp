@@ -115,7 +115,7 @@ int Laser::sendDataToSharedMemory() {
 			double angle = (StartAngle + i * Resolution) * PI / 180; // Get point angle in radians
 			LData->x[i] = Range[i] * sin(angle);
 			LData->y[i] = -Range[i] * cos(angle);
-			Console::WriteLine("Point {0, 0:N}: x: {1, 12:F3}, y: {2, 12:F3}", i, LData->x[i], LData->y[i]);
+			Console::WriteLine("Point {0, 3:N}: x: {1, 12:F3}mm, y: {2, 12:F3}mm", i, LData->x[i], LData->y[i]);
 		}
 	}
 
