@@ -21,7 +21,7 @@
 #endif
 
 #define DEGTORAD (3.141592765 / 180.0)
-#define SCAN_HEIGHT 0.15
+#define LASER_SCAN_HEIGHT 0.3 // The laser rangefinder’s scanning plane is 30 cm above the ground level
 
 void drawUGV(double steerAngle)
 {
@@ -142,7 +142,7 @@ void MyVehicle::drawLaserScans() {
 				double x = LMData->x[i] / 1000;
 				double z = LMData->y[i] / 1000;
 				glVertex3f(0, 0, 0);
-				glVertex3f(x, SCAN_HEIGHT, z);
+				glVertex3f(x, LASER_SCAN_HEIGHT, z);
 			}
 		glEnd();
 	glPopMatrix();

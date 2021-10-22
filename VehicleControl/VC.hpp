@@ -14,4 +14,6 @@ public:
 	bool getHeartbeat() override;							// Get heartbeat signal for module
 	~VehicleControl();
 protected:
+	int ControlFlag = 0;
+	int sendSteeringData();
 };

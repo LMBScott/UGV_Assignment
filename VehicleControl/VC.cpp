@@ -6,6 +6,23 @@
 #using <mscorlib.dll>
 
 int VehicleControl::connect(String^ hostName, int portNumber) {
+	// Creat TcpClient object and connect to it
+	Client = gcnew TcpClient(hostName, portNumber);
+
+	// Configure connection
+	Client->NoDelay = true;
+	Client->ReceiveTimeout = 500;
+	Client->SendTimeout = 500;
+	Client->ReceiveBufferSize = 1024;
+	Client->SendBufferSize = 1024;
+
+	// Get the network stream object associated with client so we 
+	// can use it to read and write
+	Stream = Client->GetStream();
+
+	SendData = gcnew array<unsigned char>(16);
+	ReadData = gcnew array<unsigned char>(2500);
+
 	return SUCCESS;
 }
 
@@ -31,6 +48,21 @@ int VehicleControl::getData() {
 
 int VehicleControl::checkData() {
 	return 0;
+}
+
+int VehicleControl::sendSteeringData() {
+	ControlFlag = !ControlFlag; // Flip control flag value with each transmission
+
+	SM_VehicleControl *VCData = (SM_VehicleControl*)SensorData;
+
+	char buff[64];
+	sprintf(buff, "# %.2f %.2f %d #", VCData->Steering, VCData->Speed, ControlFlag);
+	
+	String^ ControlString = gcnew String(buff); // Convert char array to CLR String handle
+
+	SendData = System::Text::Encoding::ASCII->GetBytes(ControlString); // Encode control string to binary
+
+	Stream->Write(SendData, 0, SendData->Length);
 }
 
 int VehicleControl::sendDataToSharedMemory() {

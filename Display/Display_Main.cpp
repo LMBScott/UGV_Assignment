@@ -73,6 +73,7 @@ SMObject* PMObj;
 ProcessManagement* PMData;
 SM_Laser* LMData;
 SM_GPS* GPSData;
+SM_VehicleControl* VCData;
 
 __int64 Frequency, Counter, prevCounter, PMDownCycles;
 
@@ -115,15 +116,21 @@ int main(int argc, char ** argv) {
 
 	LMObj->SMAccess();
 
-	LMData = (SM_Laser *)LMObj;
+	LMData = (SM_Laser *)LMObj->pData;
 
 	SMObject* GPSObj = new SMObject(TEXT("SM_GPS"), sizeof(SM_GPS));
 
 	GPSObj->SMAccess();
 
-	GPSData = (SM_GPS *)GPSObj;
+	GPSData = (SM_GPS *)GPSObj->pData;
 
 	vehicle = new MyVehicle(LMData, GPSData);
+
+	SMObject* VCObj = new SMObject(TEXT("SM_VehicleControl"), sizeof(SM_VehicleControl));
+	
+	VCObj->SMAccess();
+
+	VCData = (SM_VehicleControl *)VCObj->pData;
 
 	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
 	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
@@ -282,6 +289,9 @@ void idle() {
 	if (vehicle != NULL) {
 		vehicle->update(speed, steering, elapsedTime);
 	}
+	
+	VCData->Speed = speed;
+	VCData->Steering = steering;
 
 	display();
 
