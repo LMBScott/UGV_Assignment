@@ -63,6 +63,8 @@ int VehicleControl::sendSteeringData() {
 	SendData = System::Text::Encoding::ASCII->GetBytes(ControlString); // Encode control string to binary
 
 	Stream->Write(SendData, 0, SendData->Length);
+
+	return SUCCESS;
 }
 
 int VehicleControl::sendDataToSharedMemory() {
