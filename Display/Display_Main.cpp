@@ -71,6 +71,8 @@ double steering = 0;
 
 SMObject* PMObj;
 ProcessManagement* PMData;
+SM_Laser* LMData;
+SM_GPS* GPSData;
 
 __int64 Frequency, Counter, prevCounter, PMDownCycles;
 
@@ -103,18 +105,25 @@ int main(int argc, char ** argv) {
 	glutMotionFunc(dragged);
 	glutPassiveMotionFunc(motion);
 
-	// -------------------------------------------------------------------------
-	// Please uncomment the following line of code and replace 'MyVehicle'
-	//   with the name of the class you want to show as the current 
-	//   custom vehicle.
-	// -------------------------------------------------------------------------
-	vehicle = new MyVehicle();
-
 	PMObj = new SMObject(TEXT("ProcessManagement"), sizeof(ProcessManagement));
 
 	PMObj->SMAccess();
 
 	PMData = (ProcessManagement*)PMObj->pData;
+
+	SMObject *LMObj = new SMObject(TEXT("SM_Laser"), sizeof(SM_Laser));
+
+	LMObj->SMAccess();
+
+	LMData = (SM_Laser *)LMObj;
+
+	SMObject* GPSObj = new SMObject(TEXT("SM_GPS"), sizeof(SM_GPS));
+
+	GPSObj->SMAccess();
+
+	GPSData = (SM_GPS *)GPSObj;
+
+	vehicle = new MyVehicle(LMData, GPSData);
 
 	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
 	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
@@ -158,12 +167,10 @@ void display() {
 	// draw my vehicle
 	if (vehicle != NULL) {
 		vehicle->draw();
-
 	}
 
-
 	// draw HUD
-	HUD::Draw();
+	HUD::Draw(GPSData);
 
 	glutSwapBuffers();
 };

@@ -32,6 +32,7 @@ extern Vehicle * vehicle;
 
 using namespace scos;
 
+#define GPS_Title "GPS Data:"
 
 void HUD::RenderString(const char * str, int x, int y, void * font) 
 {
@@ -138,7 +139,22 @@ void HUD::DrawGauge(double x, double y, double r, double min, double max, double
 	glPopMatrix();
 }
 
-void HUD::Draw()
+void HUD::DrawGPSData(SM_GPS* GPSData, double x, double y) {
+	RenderString(GPS_Title, x, y, GLUT_BITMAP_HELVETICA_12);
+
+	char buff[80];
+
+	sprintf(buff, "Northing: %.3f", GPSData->Northing);
+	RenderString(buff, x, y + 20, GLUT_BITMAP_HELVETICA_12);
+
+	sprintf(buff, "Easting: %.3f", GPSData->Easting);
+	RenderString(buff, x, y + 40, GLUT_BITMAP_HELVETICA_12);
+
+	sprintf(buff, "Height: %.3f", GPSData->Northing);
+	RenderString(buff, x, y + 60, GLUT_BITMAP_HELVETICA_12);
+}
+
+void HUD::Draw(SM_GPS* GPSData)
 {
 	Camera::get()->switchTo2DDrawing();
 	int winWidthOff = (Camera::get()->getWindowWidth() - 800) * .5;
@@ -150,6 +166,8 @@ void HUD::Draw()
 		DrawGauge(200+winWidthOff, 280, 210, -1, 1, vehicle->getSpeed(), "Speed");
 		glColor3f(1, 1, 0);
 		DrawGauge(600+winWidthOff, 280, 210, -40, 40, vehicle->getSteering(), "Steer");
+		glColor3f(0, 0, 1);
+		DrawGPSData(GPSData, 200, 400);
 	}
 
 	Camera::get()->switchTo3DDrawing();

@@ -3,12 +3,17 @@
 
 
 #include "Vehicle.hpp"
+#include "smstructs.h"
 
 class MyVehicle : public Vehicle
 {
 public:
-	MyVehicle();
+	MyVehicle(SM_Laser* LMData, SM_GPS* GPSData);
 	virtual void draw();
+protected:
+	void drawLaserScans();
+	SM_Laser* LMData;
+	SM_GPS* GPSData;
 };
 
 #endif

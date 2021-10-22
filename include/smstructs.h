@@ -35,7 +35,7 @@ struct SM_VehicleControl
 
 struct SM_GPS
 {
-	unsigned int Header; // 0xAA 0x4 0x12 0x1C
+	unsigned int Header; // 0xAA 0x44 0x12 0x1C
 	unsigned char DiscardLot1[40];
 	double Northing;
 	double Easting;

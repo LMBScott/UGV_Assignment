@@ -20,6 +20,8 @@
 	#include <unistd.h>
 #endif
 
+#define DEGTORAD (3.141592765 / 180.0)
+#define SCAN_HEIGHT 0.15
 
 void drawUGV(double steerAngle)
 {
@@ -132,8 +134,24 @@ void drawUGV(double steerAngle)
 	glPopMatrix();
 }
 
-MyVehicle::MyVehicle()
+void MyVehicle::drawLaserScans() {
+	glPushMatrix();
+		glBegin(GL_LINES);
+			glColor3f(1.0, 0, 0);
+			for (int i = 0; i < LMData->numPoints; i++) {
+				double x = LMData->x[i] / 1000;
+				double z = LMData->y[i] / 1000;
+				glVertex3f(0, 0, 0);
+				glVertex3f(x, SCAN_HEIGHT, z);
+			}
+		glEnd();
+	glPopMatrix();
+}
+
+MyVehicle::MyVehicle(SM_Laser* LaserPtr, SM_GPS* GPSPtr)
 {
+	LMData = LaserPtr;
+	GPSData = GPSPtr;
 }
 
 void MyVehicle::draw()
@@ -141,6 +159,7 @@ void MyVehicle::draw()
 	glPushMatrix();
 	positionInGL();
 	
+	drawLaserScans();
 	drawUGV(steering);
 
 	glPopMatrix();

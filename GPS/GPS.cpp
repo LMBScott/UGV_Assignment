@@ -22,21 +22,6 @@ int GPS::connect(String^ hostName, int portNumber)
 	SendData = gcnew array<unsigned char>(16);
 	ReadData = gcnew array<unsigned char>(2500);
 
-	// Authenticate user
-	String^ zID = gcnew String("z5207471\n");
-	SendData = System::Text::Encoding::ASCII->GetBytes(zID);
-	Stream->Write(SendData, 0, SendData->Length);
-
-	System::Threading::Thread::Sleep(10);
-
-	Stream->Read(ReadData, 0, ReadData->Length);
-
-	String^ ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
-	Console::WriteLine(ResponseData);
-
-	String^ AskScan = gcnew String("sRN LMDscandata");
-	SendData = Text::Encoding::ASCII->GetBytes(AskScan);
-
 	return SUCCESS;
 }
 
@@ -60,35 +45,56 @@ int GPS::setupSharedMemory()
 
 int GPS::getData()
 {
-	// Write command asking for data
-	Stream->WriteByte(0x02);
-	Stream->Write(SendData, 0, SendData->Length);
-	Stream->WriteByte(0x03);
-
-	System::Threading::Thread::Sleep(10);
-
 	// Read the incoming data
 	Stream->Read(ReadData, 0, ReadData->Length);
 
-	String^ ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
+	unsigned int Header = 0;
+	int i = 0;
+	do {
+		unsigned char Data = ReadData[i++];
+		Header = ((Header << 8) | Data);
+	} while (Header != GPS_HEADER);
+
+	dataStartIndex = i - 4;
 
 	return SUCCESS;
 }
 
 int GPS::checkData()
 {
-	// YOUR CODE HERE
-	return 1;
+	// Verify that CRC checksum matches expected value
+
+	// Get data block as char array
+	unsigned char dataBlock[GPS_DATA_LENGTH] = {};
+
+	for (int i = 0; i < GPS_DATA_LENGTH; i++) {
+		dataBlock[i] = ReadData[dataStartIndex + i];
+	}
+
+	// Calculate expected CRC value
+	unsigned long trueCRC = CalculateBlockCRC32(GPS_DATA_LENGTH, dataBlock);
+
+	// Extract actual CRC value
+	unsigned long blockCRC = 0;
+
+	unsigned long* blockCRCPtr = (unsigned long*)&blockCRC;
+
+	for (int i = 0; i < sizeof(unsigned long); i++) {
+		*(blockCRCPtr + i) = dataBlock[GPS_DATA_LENGTH - 4 + i];
+	}
+
+	return (blockCRC == trueCRC);
 }
 
 int GPS::sendDataToSharedMemory()
 {
-	SM_GPS GPSStruct;
-	unsigned char* BytePtr = (unsigned char*)&GPSStruct;
+	SM_GPS* GPSData = (SM_GPS*)SensorData;
+	unsigned char* BytePtr = (unsigned char*)GPSData;
 
-	for (int i = 0; i < sizeof(SM_GPS); i++) {
-		*(BytePtr + i) = ReadData[i];
+	for (int i = 0; i < GPS_DATA_LENGTH; i++) {
+		*(BytePtr + i) = ReadData[dataStartIndex + i];
 	}
+
 	return 1;
 }
 
