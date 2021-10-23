@@ -2,6 +2,7 @@
 
 #include <UGV_module.h>
 #include <smstructs.h>
+#include "GPS_Struct.hpp"
 
 #define CRC32_POLYNOMIAL 0xEDB88320L
 #define GPS_HEADER 0xAA44121C // Header of a GPS data stream
@@ -26,4 +27,5 @@ public:
 
 protected:
 	int dataStartIndex;
+	GPS_Data_Struct *GPSDataStruct;
 };

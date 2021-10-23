@@ -135,16 +135,22 @@ void drawUGV(double steerAngle)
 }
 
 void MyVehicle::drawLaserScans() {
+	glPointSize(2);
 	glPushMatrix();
-		glBegin(GL_LINES);
-			glColor3f(1.0, 0, 0);
-			for (int i = 0; i < LMData->numPoints; i++) {
-				double z = LMData->x[i] / 1000;
-				double x = LMData->y[i] / 1000;
+		for (int i = 0; i < LMData->numPoints; i++) {
+			double z = LMData->x[i] / 1000;
+			double x = LMData->y[i] / 1000;
+			glBegin(GL_LINES);
+				glColor4f(1.0, 0, 0, 0.35);
 				glVertex3f(0.5, LASER_SCAN_HEIGHT, 0);
 				glVertex3f(x + 0.5, LASER_SCAN_HEIGHT, z);
-			}
-		glEnd();
+			glEnd();
+			glBegin(GL_POINTS);
+				glColor3f(1.0, 1.0, 1.0);
+				glVertex3f(x + 0.5, LASER_SCAN_HEIGHT, z);
+			glEnd();
+		}
+		
 	glPopMatrix();
 }
 

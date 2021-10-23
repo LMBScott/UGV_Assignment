@@ -81,25 +81,29 @@ int GPS::checkData()
 	Console::WriteLine("True CRC: {0:12N}", trueCRC);
 
 	// Extract actual CRC value
-	unsigned long blockCRC = 0;
+	GPS_Data_Struct readStruct = { 0 };
+	unsigned char* BytePtr = (unsigned char*)&readStruct;
+	GPSDataStruct = &readStruct;
 
-	unsigned long* blockCRCPtr = (unsigned long*)&blockCRC;
-
-	for (int i = 0; i < sizeof(unsigned long); i++) {
-		*(blockCRCPtr + i) = dataBlock[GPS_DATA_LENGTH - 4 + i];
+	for (int i = 0; i < GPS_DATA_LENGTH; i++) {
+		*(BytePtr + i) = ReadData[dataStartIndex + i];
 	}
 
-	return (blockCRC == trueCRC);
+	return (readStruct.CRC == trueCRC);
 }
 
 int GPS::sendDataToSharedMemory()
 {
 	SM_GPS* GPSData = (SM_GPS*)SensorData;
-	unsigned char* BytePtr = (unsigned char*)GPSData;
+	/*unsigned char* BytePtr = (unsigned char*)GPSData;
 
 	for (int i = 0; i < GPS_DATA_LENGTH; i++) {
 		*(BytePtr + i) = ReadData[dataStartIndex + i];
-	}
+	}*/
+
+	GPSData->Northing = GPSDataStruct->Northing;
+	GPSData->Easting = GPSDataStruct->Easting;
+	GPSData->Height = GPSDataStruct->Height;
 	
 	Console::WriteLine("Northing: {0, 5:F3}, Easting: {1, 5:F3}, Height: {2, 5:F3}m", GPSData->Northing, GPSData->Easting, GPSData->Height);
 

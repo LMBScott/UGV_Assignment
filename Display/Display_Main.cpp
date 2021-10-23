@@ -92,6 +92,8 @@ int main(int argc, char ** argv) {
 	Camera::get()->setWindowDimensions(WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	glEnable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
 
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);

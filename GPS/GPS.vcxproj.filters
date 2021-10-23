@@ -18,6 +18,9 @@
     <ClInclude Include="GPS.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GPS_Struct.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GPS.cpp">

@@ -123,6 +123,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="GPS.hpp" />
+    <ClInclude Include="GPS_Struct.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GPS.cpp" />
