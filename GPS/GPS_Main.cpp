@@ -35,19 +35,25 @@ int main() {
 
 	long int PMDownCycles = 0;
 
-	while (!_kbhit()) {
-		prevCounter = Counter;
-		QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
+	while (1/*!_kbhit()*/) {
+		//prevCounter = Counter;
+		//QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
 
-		TimeStamp = ((double)Counter / (double)Frequency) * 1000;
+		//TimeStamp = ((double)Counter / (double)Frequency) * 1000;
 
 		GM->getData();
-		GM->sendDataToSharedMemory();
-		//if (GM->checkData()) {
-			
-		//}
+		
+		if (GM->checkData()) {
+			Console::WriteLine("CRC values matched, sending data to shared memory.");
+			GM->sendDataToSharedMemory();
+		}
+		else {
+			Console::WriteLine("CRC values did not match.");
+		}
 
-		if (GM->getHeartbeat()) {
+		Console::ReadKey();
+
+		/*if (GM->getHeartbeat()) {
 			// Get process management down time in seconds
 			long int PMLifeTime = PMDownCycles / (double)Frequency;
 
@@ -60,13 +66,13 @@ int main() {
 		else {
 			GM->setHeartbeat(true);
 			PMDownCycles = 0;
-		}
+		}*/
 		//Console::WriteLine("GPS time stamp: {0, 12:F3}, Shutdown: {1, 12:X2}", TimeStamp, GM->getShutdownFlag());
 		Thread::Sleep(25);
 
-		if (GM->getShutdownFlag()) {
-			break;
-		}
+		//if (GM->getShutdownFlag()) {
+		//	break;
+		//}
 	}
 
 	return 0;
