@@ -117,6 +117,7 @@ int Laser::sendDataToSharedMemory() {
 			Console::WriteLine("Point {0, 3:N}: x: {1, 12:F3}mm, y: {2, 12:F3}mm", i, LData->x[i], LData->y[i]);
 		}
 	}
+	Console::ReadKey();
 
 	return SUCCESS;
 }

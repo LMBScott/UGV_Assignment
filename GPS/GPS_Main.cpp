@@ -51,8 +51,6 @@ int main() {
 			Console::WriteLine("CRC values did not match.");
 		}
 
-		Console::ReadKey();
-
 		/*if (GM->getHeartbeat()) {
 			// Get process management down time in seconds
 			long int PMLifeTime = PMDownCycles / (double)Frequency;

@@ -21,6 +21,7 @@ public:
 	int getData() override;
 	int checkData() override;
 	int sendDataToSharedMemory() override;
+	GPS_Data_Struct packData();
 	bool getShutdownFlag() override;
 	int setHeartbeat(bool heartbeat) override;
 	bool getHeartbeat() override;
@@ -28,5 +29,4 @@ public:
 
 protected:
 	int dataStartIndex;
-	GPS_Data_Struct *GPSDataStruct;
 };

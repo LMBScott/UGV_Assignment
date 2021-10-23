@@ -66,48 +66,52 @@ int GPS::getData()
 	return SUCCESS;
 }
 
+GPS_Data_Struct GPS::packData() {
+	GPS_Data_Struct readStruct = { 0 };
+	unsigned char* BytePtr = (unsigned char*)&readStruct;
+
+	for (int i = 0; i < GPS_DATA_LENGTH; i++) {
+		*(BytePtr + i) = ReadData[dataStartIndex + i];
+	}
+
+	return readStruct;
+}
+
 int GPS::checkData()
 {
 	// Verify that CRC checksum matches expected value
 
 	// Get data block as char array
 	unsigned char dataBlock[GPS_DATA_LENGTH] = {};
-
+	
+	// Pack data into unsigned char array (excluding CRC value)
 	for (int i = 0; i < GPS_DATA_LENGTH - CRC_LENGTH; i++) {
 		dataBlock[i] = (unsigned char)ReadData[dataStartIndex + i];
 	}
 
-	// Calculate expected CRC value
+	// Calculate expected CRC value from binary data
 	unsigned long trueCRC = CalculateBlockCRC32(GPS_DATA_LENGTH - CRC_LENGTH, dataBlock);
 	
 	Console::WriteLine("True CRC: {0, 12:N}", trueCRC);
 
-	// Extract actual CRC value
-	GPS_Data_Struct readStruct = { 0 };
-	unsigned char* BytePtr = (unsigned char*)&readStruct;
-	GPSDataStruct = &readStruct;
+	// Extract actual CRC value from struct-packed data
+	GPS_Data_Struct GPSDataStruct = packData();
 
-	for (int i = 0; i < GPS_DATA_LENGTH; i++) {
-		*(BytePtr + i) = ReadData[dataStartIndex + i];
-	}
-
-	Console::WriteLine("Read CRC: {0, 12:N}, Read Northing: {1, 12:F3}, Read Easting: {2, 12:F3}, Read Height: {3, 12:F3}", GPSDataStruct->CRC, GPSDataStruct->Northing, GPSDataStruct->Easting, GPSDataStruct->Height);
-
-	return (readStruct.CRC == trueCRC);
+	Console::WriteLine("Read CRC: {0, 12:N}, Read Northing: {1, 12:F3}, Read Easting: {2, 12:F3}, Read Height: {3, 12:F3}", GPSDataStruct.CRC, GPSDataStruct.Northing, GPSDataStruct.Easting, GPSDataStruct.Height);
+	
+	// Data validity is determined by whether or not CRC values match
+	return (GPSDataStruct.CRC == trueCRC);
 }
 
 int GPS::sendDataToSharedMemory()
 {
 	SM_GPS* GPSData = (SM_GPS*)SensorData;
-	/*unsigned char* BytePtr = (unsigned char*)GPSData;
 
-	for (int i = 0; i < GPS_DATA_LENGTH; i++) {
-		*(BytePtr + i) = ReadData[dataStartIndex + i];
-	}*/
+	GPS_Data_Struct GPSDataStruct = packData();
 
-	GPSData->Northing = GPSDataStruct->Northing;
-	GPSData->Easting = GPSDataStruct->Easting;
-	GPSData->Height = GPSDataStruct->Height;
+	GPSData->Northing = GPSDataStruct.Northing;
+	GPSData->Easting = GPSDataStruct.Easting;
+	GPSData->Height = GPSDataStruct.Height;
 	
 	Console::WriteLine("Northing: {0, 5:F3}, Easting: {1, 5:F3}, Height: {2, 5:F3}m", GPSData->Northing, GPSData->Easting, GPSData->Height);
 
@@ -164,7 +168,6 @@ unsigned long CalculateBlockCRC32(unsigned long ulCount, /* Number of bytes in t
 	unsigned long ulCRC = 0;
 	while (ulCount-- != 0)
 	{
-		Console::WriteLine("Index: {0}, Value: {1, 3:X}, CRC value: {2, 12:N}", ulCount, *ucBuffer, ulCRC);
 		ulTemp1 = (ulCRC >> 8) & 0x00FFFFFFL;
 		ulTemp2 = CRC32Value(((int)ulCRC ^ *ucBuffer++) & 0xff);
 		ulCRC = ulTemp1 ^ ulTemp2;
