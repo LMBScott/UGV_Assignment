@@ -56,7 +56,7 @@ int main() {
 			PMDownCycles = 0;
 		}
 
-		Thread::Sleep(25);
+		Thread::Sleep(50);
 
 		if (VC->getShutdownFlag()) {
 			break;
