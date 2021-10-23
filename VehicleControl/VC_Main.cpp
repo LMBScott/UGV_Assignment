@@ -29,7 +29,6 @@ int main() {
 
 	Console::WriteLine("Connected to VC Server.");
 
-	double TimeStamp;
 	__int64 Frequency, Counter, prevCounter;
 
 	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
@@ -39,12 +38,8 @@ int main() {
 	long int PMDownCycles = 0;
 
 	while (!_kbhit()) {
-		prevCounter = Counter;
-		QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
 		
 		VC->sendSteeringData();
-
-		TimeStamp = ((double)Counter / (double)Frequency) * 1000;
 
 		if (VC->getHeartbeat()) {
 			// Get process management down time in seconds
@@ -60,7 +55,7 @@ int main() {
 			VC->setHeartbeat(true);
 			PMDownCycles = 0;
 		}
-		Console::WriteLine("Vehicle Control time stamp: {0, 12:F3}, Shutdown: {1, 12:X2}", TimeStamp, VC->getShutdownFlag());
+
 		Thread::Sleep(25);
 
 		if (VC->getShutdownFlag()) {

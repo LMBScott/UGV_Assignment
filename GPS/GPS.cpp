@@ -50,8 +50,6 @@ int GPS::getData()
 	// Read the incoming data
 	Stream->Read(ReadData, 0, ReadData->Length);
 
-	Thread::Sleep(20);
-
 	unsigned int Header = 0;
 	int i = 0;
 	do {
@@ -113,7 +111,7 @@ int GPS::sendDataToSharedMemory()
 	GPSData->Easting = GPSDataStruct.Easting;
 	GPSData->Height = GPSDataStruct.Height;
 	
-	Console::WriteLine("Northing: {0, 5:F3}, Easting: {1, 5:F3}, Height: {2, 5:F3}m", GPSData->Northing, GPSData->Easting, GPSData->Height);
+	Console::WriteLine("Northing: {0, 5:F3}m, Easting: {1, 5:F3}m, Height: {2, 5:F3}m", GPSData->Northing, GPSData->Easting, GPSData->Height);
 
 	return 1;
 }

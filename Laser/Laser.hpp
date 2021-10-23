@@ -18,4 +18,5 @@ public:
 	bool getHeartbeat() override;							// Get heartbeat signal for module
 	~Laser();
 protected:
+	int numPointsRead = 0;
 };

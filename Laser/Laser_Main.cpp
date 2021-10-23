@@ -28,7 +28,6 @@ int main() {
 
 	Console::WriteLine("Connected to Laser Server.");
 
-	double TimeStamp;
 	__int64 Frequency, Counter, prevCounter;
 
 	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
@@ -40,8 +39,6 @@ int main() {
 	while (!_kbhit()) {
 		prevCounter = Counter;
 		QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
-
-		TimeStamp = ((double)Counter / (double)Frequency) * 1000;
 
 		LM->getData();
 		Console::WriteLine("Got Laser Data");
@@ -60,7 +57,7 @@ int main() {
 			LM->setHeartbeat(true);
 			PMDownCycles = 0;
 		}
-		//Console::WriteLine("Laser time stamp: {0, 12:F3}, Shutdown: {1, 12:X2}", TimeStamp, LM->getShutdownFlag());
+
 		Thread::Sleep(25);
 
 		if (LM->getShutdownFlag()) {

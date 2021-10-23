@@ -144,13 +144,13 @@ void HUD::DrawGPSData(SM_GPS* GPSData, double x, double y) {
 
 	char buff[80];
 
-	sprintf(buff, "Northing: %.3f", GPSData->Northing);
+	sprintf(buff, "Northing: %.3fm", GPSData->Northing);
 	RenderString(buff, x, y + 36, GLUT_BITMAP_HELVETICA_18);
 
-	sprintf(buff, "Easting: %.3f", GPSData->Easting);
+	sprintf(buff, "Easting: %.3fm", GPSData->Easting);
 	RenderString(buff, x, y + 72, GLUT_BITMAP_HELVETICA_18);
 
-	sprintf(buff, "Height: %.3f", GPSData->Height);
+	sprintf(buff, "Height: %.3fm", GPSData->Height);
 	RenderString(buff, x, y + 108, GLUT_BITMAP_HELVETICA_18);
 }
 
