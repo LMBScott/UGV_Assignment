@@ -55,6 +55,8 @@ int VehicleControl::sendSteeringData() {
 
 	SM_VehicleControl *VCData = (SM_VehicleControl*)SensorData;
 
+	Console::WriteLine("Steering: {0, 5:F3}, Speed: {1, 5:F3}", VCData->Steering, VCData->Speed);
+
 	char buff[64];
 	sprintf(buff, "# %.2f %.2f %d #", VCData->Steering, VCData->Speed, ControlFlag);
 	

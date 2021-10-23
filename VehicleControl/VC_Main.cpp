@@ -24,6 +24,11 @@ int main() {
 
 	Console::WriteLine("Set up Vehicle Control Module shared memory.");
 
+	String^ IPString = gcnew String(VC_IP);
+	VC->connect(IPString, VC_PORT);
+
+	Console::WriteLine("Connected to VC Server.");
+
 	double TimeStamp;
 	__int64 Frequency, Counter, prevCounter;
 
@@ -36,6 +41,8 @@ int main() {
 	while (!_kbhit()) {
 		prevCounter = Counter;
 		QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
+		
+		VC->sendSteeringData();
 
 		TimeStamp = ((double)Counter / (double)Frequency) * 1000;
 

@@ -13,7 +13,7 @@ public:
 	int setHeartbeat(bool heartbeat) override;				// Update heartbeat signal for module
 	bool getHeartbeat() override;							// Get heartbeat signal for module
 	~VehicleControl();
+	int sendSteeringData();
 protected:
 	int ControlFlag = 0;
-	int sendSteeringData();
 };

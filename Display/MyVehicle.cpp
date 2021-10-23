@@ -139,10 +139,10 @@ void MyVehicle::drawLaserScans() {
 		glBegin(GL_LINES);
 			glColor3f(1.0, 0, 0);
 			for (int i = 0; i < LMData->numPoints; i++) {
-				double x = LMData->x[i] / 1000;
-				double z = LMData->y[i] / 1000;
-				glVertex3f(0, 0, 0);
-				glVertex3f(x, LASER_SCAN_HEIGHT, z);
+				double z = LMData->x[i] / 1000;
+				double x = LMData->y[i] / 1000;
+				glVertex3f(0.5, LASER_SCAN_HEIGHT, 0);
+				glVertex3f(x + 0.5, LASER_SCAN_HEIGHT, z);
 			}
 		glEnd();
 	glPopMatrix();

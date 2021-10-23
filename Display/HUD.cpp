@@ -140,18 +140,18 @@ void HUD::DrawGauge(double x, double y, double r, double min, double max, double
 }
 
 void HUD::DrawGPSData(SM_GPS* GPSData, double x, double y) {
-	RenderString(GPS_Title, x, y, GLUT_BITMAP_HELVETICA_12);
+	RenderString(GPS_Title, x, y, GLUT_BITMAP_HELVETICA_18);
 
 	char buff[80];
 
 	sprintf(buff, "Northing: %.3f", GPSData->Northing);
-	RenderString(buff, x, y + 20, GLUT_BITMAP_HELVETICA_12);
+	RenderString(buff, x, y + 36, GLUT_BITMAP_HELVETICA_18);
 
 	sprintf(buff, "Easting: %.3f", GPSData->Easting);
-	RenderString(buff, x, y + 40, GLUT_BITMAP_HELVETICA_12);
+	RenderString(buff, x, y + 72, GLUT_BITMAP_HELVETICA_18);
 
-	sprintf(buff, "Height: %.3f", GPSData->Northing);
-	RenderString(buff, x, y + 60, GLUT_BITMAP_HELVETICA_12);
+	sprintf(buff, "Height: %.3f", GPSData->Height);
+	RenderString(buff, x, y + 108, GLUT_BITMAP_HELVETICA_18);
 }
 
 void HUD::Draw(SM_GPS* GPSData)
@@ -167,7 +167,7 @@ void HUD::Draw(SM_GPS* GPSData)
 		glColor3f(1, 1, 0);
 		DrawGauge(600+winWidthOff, 280, 210, -40, 40, vehicle->getSteering(), "Steer");
 		glColor3f(0, 0, 1);
-		DrawGPSData(GPSData, 200, 400);
+		DrawGPSData(GPSData, 20, Camera::get()->getWindowHeight() - 136);
 	}
 
 	Camera::get()->switchTo3DDrawing();
