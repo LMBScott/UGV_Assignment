@@ -3,6 +3,8 @@
 #include <SMObject.h>
 #include <smstructs.h>
 
+using namespace System::Threading;
+
 int GPS::connect(String^ hostName, int portNumber)
 {
 	// Creat TcpClient object and connect to it
@@ -10,9 +12,9 @@ int GPS::connect(String^ hostName, int portNumber)
 
 	// Configure connection
 	Client->NoDelay = true;
-	Client->ReceiveTimeout = 500;
+	Client->ReceiveTimeout = 1000;
 	Client->SendTimeout = 500;
-	Client->ReceiveBufferSize = 1024;
+	Client->ReceiveBufferSize = 2048;
 	Client->SendBufferSize = 1024;
 
 	// Get the network stream object associated with client so we 
@@ -47,6 +49,8 @@ int GPS::getData()
 {
 	// Read the incoming data
 	Stream->Read(ReadData, 0, ReadData->Length);
+
+	Thread::Sleep(20);
 
 	unsigned int Header = 0;
 	int i = 0;
@@ -94,6 +98,8 @@ int GPS::sendDataToSharedMemory()
 	for (int i = 0; i < GPS_DATA_LENGTH; i++) {
 		*(BytePtr + i) = ReadData[dataStartIndex + i];
 	}
+	
+	Console::WriteLine("Northing: {0, 5:F3}, Easting: {1, 5:F3}, Height: {2, 5:F3}", GPSData->Northing, GPSData->Easting, GPSData->Height);
 
 	return 1;
 }

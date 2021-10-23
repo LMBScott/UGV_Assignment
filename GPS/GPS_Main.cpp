@@ -21,10 +21,10 @@ int main() {
 
 	Console::WriteLine("Set up GPS Module shared memory.");
 
-	//String^ IPString = gcnew String(GPS_IP);
-	//GM->connect(IPString, GPS_PORT);
+	String^ IPString = gcnew String(GPS_IP);
+	GM->connect(IPString, GPS_PORT);
 
-	//Console::WriteLine("Connected to GPS Server.");
+	Console::WriteLine("Connected to GPS Server.");
 
 	double TimeStamp;
 	__int64 Frequency, Counter, prevCounter;
@@ -41,9 +41,10 @@ int main() {
 
 		TimeStamp = ((double)Counter / (double)Frequency) * 1000;
 
-		//GM->getData();
+		GM->getData();
+		GM->sendDataToSharedMemory();
 		//if (GM->checkData()) {
-		//	GM->sendDataToSharedMemory();
+			
 		//}
 
 		if (GM->getHeartbeat()) {
@@ -60,7 +61,7 @@ int main() {
 			GM->setHeartbeat(true);
 			PMDownCycles = 0;
 		}
-		Console::WriteLine("GPS time stamp: {0, 12:F3}, Shutdown: {1, 12:X2}", TimeStamp, GM->getShutdownFlag());
+		//Console::WriteLine("GPS time stamp: {0, 12:F3}, Shutdown: {1, 12:X2}", TimeStamp, GM->getShutdownFlag());
 		Thread::Sleep(25);
 
 		if (GM->getShutdownFlag()) {
