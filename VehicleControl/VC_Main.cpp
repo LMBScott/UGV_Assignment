@@ -38,10 +38,13 @@ int main() {
 	long int PMDownCycles = 0;
 
 	while (!_kbhit()) {
+		prevCounter = Counter;
+		QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
 		
 		VC->sendSteeringData();
 
 		if (VC->getHeartbeat()) {
+			Console::WriteLine("Lost PM Heartbeat!");
 			// Get process management down time in seconds
 			long int PMLifeTime = PMDownCycles / (double)Frequency;
 
@@ -56,11 +59,11 @@ int main() {
 			PMDownCycles = 0;
 		}
 
-		Thread::Sleep(50);
-
 		if (VC->getShutdownFlag()) {
 			break;
 		}
+
+		Thread::Sleep(50);
 	}
 	return 0;
 }

@@ -29,18 +29,23 @@ int VehicleControl::connect(String^ hostName, int portNumber) {
 	Console::WriteLine("Authorising use of control module");
 
 	// Authenticate user
-	String^ zID = gcnew String(AUTH_INPUT);
-	SendData = System::Text::Encoding::ASCII->GetBytes(zID);
+	String^ authInputString = gcnew String(AUTH_INPUT);
+	SendData = System::Text::Encoding::ASCII->GetBytes(authInputString);
 	Stream->Write(SendData, 0, SendData->Length);
 	
 	String^ ResponseData;
 	
 	Console::WriteLine("Awaiting authorisation response...");
 
-	do { // Wait for authorisation response
-		Stream->Read(ReadData, 0, ReadData->Length);
-		ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
-	} while (ResponseData != AUTH_OUTPUT);
+	//do { // Wait for authorisation response
+	//	System::Threading::Thread::Sleep(20);
+	//	Stream->Read(ReadData, 0, ReadData->Length);
+	//	ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
+	//} while (ResponseData != AUTH_OUTPUT);
+
+	System::Threading::Thread::Sleep(20);
+	Stream->Read(ReadData, 0, ReadData->Length);
+	ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
 	
 	Console::WriteLine("Got response: {0}", ResponseData);
 	
@@ -75,8 +80,6 @@ int VehicleControl::sendSteeringData() {
 	ControlFlag = !ControlFlag; // Flip control flag value with each transmission
 
 	SM_VehicleControl *VCData = (SM_VehicleControl*)SensorData;
-
-	Console::WriteLine("Steering: {0, 5:F3}, Speed: {1, 5:F3}", VCData->Steering, VCData->Speed);
 
 	char buff[64];
 	sprintf(buff, "# %.2f %.2f %d #", VCData->Steering, VCData->Speed, ControlFlag);
