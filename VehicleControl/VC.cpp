@@ -5,6 +5,9 @@
 
 #using <mscorlib.dll>
 
+#define AUTH_INPUT "z5207471\n"
+#define AUTH_OUTPUT "OK\n"
+
 int VehicleControl::connect(String^ hostName, int portNumber) {
 	// Creat TcpClient object and connect to it
 	Client = gcnew TcpClient(hostName, portNumber);
@@ -23,18 +26,24 @@ int VehicleControl::connect(String^ hostName, int portNumber) {
 	SendData = gcnew array<unsigned char>(16);
 	ReadData = gcnew array<unsigned char>(2500);
 
+	Console::WriteLine("Authorising use of control module");
+
 	// Authenticate user
-	String^ zID = gcnew String("z5207471\n");
+	String^ zID = gcnew String(AUTH_INPUT);
 	SendData = System::Text::Encoding::ASCII->GetBytes(zID);
 	Stream->Write(SendData, 0, SendData->Length);
+	
+	String^ ResponseData;
+	
+	Console::WriteLine("Awaiting authorisation response...");
 
-	System::Threading::Thread::Sleep(10);
-
-	Stream->Read(ReadData, 0, ReadData->Length);
-
-	String^ ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
-	Console::WriteLine(ResponseData);
-
+	do { // Wait for authorisation response
+		Stream->Read(ReadData, 0, ReadData->Length);
+		ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
+	} while (ResponseData != AUTH_OUTPUT);
+	
+	Console::WriteLine("Got response: {0}", ResponseData);
+	
 	return SUCCESS;
 }
 

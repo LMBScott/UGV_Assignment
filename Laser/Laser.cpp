@@ -5,6 +5,9 @@
 
 #using <mscorlib.dll>
 
+#define AUTH_INPUT "z5207471\n"
+#define AUTH_OUTPUT "OK\n"
+
 #define START_ANGLE_INDEX 23
 #define RESOLUTION_INDEX 24
 #define NUM_POINTS_INDEX 25
@@ -31,17 +34,23 @@ int Laser::connect(String^ hostName, int portNumber) {
 	SendData = gcnew array<unsigned char>(16);
 	ReadData = gcnew array<unsigned char>(2500);
 
+	Console::WriteLine("Authorising use of laser module");
+
 	// Authenticate user
-	String^ zID = gcnew String("z5207471\n");
+	String^ zID = gcnew String(AUTH_INPUT);
 	SendData = System::Text::Encoding::ASCII->GetBytes(zID);
 	Stream->Write(SendData, 0, SendData->Length);
 
-	System::Threading::Thread::Sleep(10);
+	String^ ResponseData;
 
-	Stream->Read(ReadData, 0, ReadData->Length);
+	Console::WriteLine("Awaiting authorisation response...");
 
-	String^ ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
-	Console::WriteLine(ResponseData);
+	do { // Wait for authorisation response
+		Stream->Read(ReadData, 0, ReadData->Length);
+		ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
+	} while (ResponseData != AUTH_OUTPUT);
+
+	Console::WriteLine("Got response: {0}", ResponseData);
 
 	String^ AskScan = gcnew String("sRN LMDscandata");
 	SendData = Text::Encoding::ASCII->GetBytes(AskScan);
