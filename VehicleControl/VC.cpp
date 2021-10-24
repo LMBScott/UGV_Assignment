@@ -74,6 +74,8 @@ int VehicleControl::sendSteeringData() {
 	
 	String^ ControlString = gcnew String(buff); // Convert char array to CLR String handle
 
+	Console::WriteLine("Sending control string to control module: \"{0}\"", ControlString);
+
 	SendData = System::Text::Encoding::ASCII->GetBytes(ControlString); // Encode control string to binary
 
 	Stream->Write(SendData, 0, SendData->Length);
