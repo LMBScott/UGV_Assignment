@@ -23,6 +23,18 @@ int VehicleControl::connect(String^ hostName, int portNumber) {
 	SendData = gcnew array<unsigned char>(16);
 	ReadData = gcnew array<unsigned char>(2500);
 
+	// Authenticate user
+	String^ zID = gcnew String("z5207471\n");
+	SendData = System::Text::Encoding::ASCII->GetBytes(zID);
+	Stream->Write(SendData, 0, SendData->Length);
+
+	System::Threading::Thread::Sleep(10);
+
+	Stream->Read(ReadData, 0, ReadData->Length);
+
+	String^ ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
+	Console::WriteLine(ResponseData);
+
 	return SUCCESS;
 }
 
