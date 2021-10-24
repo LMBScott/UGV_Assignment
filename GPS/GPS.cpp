@@ -90,12 +90,12 @@ int GPS::checkData()
 	// Calculate expected CRC value from binary data
 	unsigned long trueCRC = CalculateBlockCRC32(GPS_DATA_LENGTH - CRC_LENGTH, dataBlock);
 	
-	Console::WriteLine("True CRC: {0, 12:N}", trueCRC);
+	Console::WriteLine("True CRC: {0, 12:X}", trueCRC);
 
 	// Extract actual CRC value from struct-packed data
 	GPS_Data_Struct GPSDataStruct = packData();
 
-	Console::WriteLine("Read CRC: {0, 12:N}", GPSDataStruct.CRC);
+	Console::WriteLine("Read CRC: {0, 12:X}", GPSDataStruct.CRC);
 	
 	// Data validity is determined by whether or not CRC values match
 	return (GPSDataStruct.CRC == trueCRC);
@@ -111,7 +111,7 @@ int GPS::sendDataToSharedMemory()
 	GPSData->Easting = GPSDataStruct.Easting;
 	GPSData->Height = GPSDataStruct.Height;
 	
-	Console::WriteLine("Northing: {0, 5:F3}m, Easting: {1, 5:F3}m, Height: {2, 5:F3}m, CRC: {3}", GPSData->Northing, GPSData->Easting, GPSData->Height, GPSDataStruct.CRC);
+	Console::WriteLine("Northing: {0, 5:F3}m, Easting: {1, 5:F3}m, Height: {2, 5:F3}m, CRC: {3, 12:X}", GPSData->Northing, GPSData->Easting, GPSData->Height, GPSDataStruct.CRC);
 
 	return 1;
 }
