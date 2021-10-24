@@ -44,7 +44,6 @@ int main() {
 		VC->sendSteeringData();
 
 		if (VC->getHeartbeat()) {
-			Console::WriteLine("Lost PM Heartbeat!");
 			// Get process management down time in seconds
 			long int PMLifeTime = PMDownCycles / (double)Frequency;
 
