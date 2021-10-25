@@ -117,27 +117,32 @@ int Laser::sendDataToSharedMemory() {
 
 	SM_Laser* LData = (SM_Laser*)SensorData;
 
-	double StartAngle = System::Convert::ToInt32(ResponseData[START_ANGLE_INDEX], 16) / (double)ANGLE_DIVISION;
-	//Console::WriteLine("Start angle:" + StartAngle);
-	double Resolution = System::Convert::ToInt32(ResponseData[RESOLUTION_INDEX], 16) / (double)ANGLE_DIVISION;
-	//Console::WriteLine("Resolution:" + Resolution);
-	int NumPoints = System::Convert::ToInt32(ResponseData[NUM_POINTS_INDEX], 16);
+	try {
+		double StartAngle = System::Convert::ToInt32(ResponseData[START_ANGLE_INDEX], 16) / (double)ANGLE_DIVISION;
+		//Console::WriteLine("Start angle:" + StartAngle);
+		double Resolution = System::Convert::ToInt32(ResponseData[RESOLUTION_INDEX], 16) / (double)ANGLE_DIVISION;
+		//Console::WriteLine("Resolution:" + Resolution);
+		int NumPoints = System::Convert::ToInt32(ResponseData[NUM_POINTS_INDEX], 16);
 
-	numPointsRead = NumPoints;
+		numPointsRead = NumPoints;
 
-	Console::WriteLine("Laser data points received:" + LData->numPoints);
+		Console::WriteLine("Laser data points received:" + LData->numPoints);
 
-	if (checkData()) {
-		LData->numPoints = NumPoints;
-		array<double>^ Range = gcnew array<double>(NumPoints);
+		if (checkData()) {
+			LData->numPoints = NumPoints;
+			array<double>^ Range = gcnew array<double>(NumPoints);
 
-		for (int i = 0; i < NumPoints; i++) {
-			Range[i] = System::Convert::ToInt32(ResponseData[DATA_START_INDEX + i], 16);
-			double angle = (StartAngle + i * Resolution) * PI / 180; // Get point angle in radians
-			LData->x[i] = Range[i] * cos(angle);
-			LData->y[i] = Range[i] * sin(angle);
-			//Console::WriteLine("Point {0, 3:N}: x: {1, 12:F3}mm, y: {2, 12:F3}mm", i, LData->x[i], LData->y[i]);
+			for (int i = 0; i < NumPoints; i++) {
+				Range[i] = System::Convert::ToInt32(ResponseData[DATA_START_INDEX + i], 16);
+				double angle = (StartAngle + i * Resolution) * PI / 180; // Get point angle in radians
+				LData->x[i] = Range[i] * cos(angle);
+				LData->y[i] = Range[i] * sin(angle);
+				//Console::WriteLine("Point {0, 3:N}: x: {1, 12:F3}mm, y: {2, 12:F3}mm", i, LData->x[i], LData->y[i]);
+			}
 		}
+	} catch (System::FormatException^ e) {
+		Console::WriteLine("Data stream was in incorrect format");
+		return ERR_INVALID_DATA;
 	}
 
 	return SUCCESS;

@@ -26,7 +26,7 @@ int PM_Module::setupSharedMemory() {
 }
 
 int PM_Module::setupDataStructures() {
-	ModuleList = gcnew array<String^> { "Laser_z5207471", "VehicleControl_z5207471", "GPS_z5207471", "Display_z5207471", "Camera_z5207471" };
+	ModuleList = gcnew array<String^> { "Laser_LScott", "VehicleControl_z5207471", "GPS_z5207471", "Display_LScott", "Camera_z5207471" };
 	MaxWait = gcnew array<int>(ModuleList->Length) { 5, 5, 5, 5, 5 };
 	Critical = gcnew array<int>(ModuleList->Length) { 0, 0, 0, 0, 0 };
 	ProcessList = gcnew array<Process^>(ModuleList->Length);
