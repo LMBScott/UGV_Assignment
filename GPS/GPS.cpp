@@ -47,6 +47,10 @@ int GPS::setupSharedMemory()
 
 int GPS::getData()
 {
+	if (!Stream->DataAvailable) { // No data returned by GPS module
+		return ERR_NO_DATA;
+	}
+
 	// Read the incoming data
 	Stream->Read(ReadData, 0, ReadData->Length);
 

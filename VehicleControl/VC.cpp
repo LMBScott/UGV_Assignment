@@ -43,7 +43,10 @@ int VehicleControl::connect(String^ hostName, int portNumber) {
 	//	ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
 	//} while (ResponseData != AUTH_OUTPUT);
 
-	System::Threading::Thread::Sleep(20);
+	while (!Stream->DataAvailable) { // Await authorisation response
+		System::Threading::Thread::Sleep(10);
+	}
+
 	Stream->Read(ReadData, 0, ReadData->Length);
 	ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
 	

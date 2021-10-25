@@ -50,8 +50,11 @@ int Laser::connect(String^ hostName, int portNumber) {
 	//	Stream->Read(ReadData, 0, ReadData->Length);
 	//	ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
 	//} while (ResponseData != AUTH_OUTPUT);
-
-	System::Threading::Thread::Sleep(20);
+	
+	while (!Stream->DataAvailable) { // Await authorisation response
+		System::Threading::Thread::Sleep(10);
+	}
+	
 	Stream->Read(ReadData, 0, ReadData->Length);
 	ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
 
@@ -85,6 +88,10 @@ int Laser::getData() {
 	Stream->WriteByte(0x03);
 
 	System::Threading::Thread::Sleep(10);
+
+	if (!Stream->DataAvailable) { // No data returned by Laser module
+		return ERR_NO_DATA;
+	}
 
 	// Read the incoming data
 	Stream->Read(ReadData, 0, ReadData->Length);

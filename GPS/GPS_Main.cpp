@@ -37,15 +37,17 @@ int main() {
 	while (!_kbhit()) {
 		prevCounter = Counter;
 		QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
-
-		GM->getData();
 		
-		if (GM->checkData()) {
-			Console::WriteLine("CRC values matched, sending data to shared memory.");
-			GM->sendDataToSharedMemory();
-		}
-		else {
-			Console::WriteLine("CRC values did not match.");
+		if (GM->getData() == SUCCESS) {
+			if (GM->checkData()) {
+				Console::WriteLine("Data received, CRC values matched, sending data to shared memory.");
+				GM->sendDataToSharedMemory();
+			}
+			else {
+				Console::WriteLine("CRC values did not match.");
+			}
+		} else {
+			Console::WriteLine("Failed to get data from GPS module.");
 		}
 
 		if (GM->getHeartbeat()) {

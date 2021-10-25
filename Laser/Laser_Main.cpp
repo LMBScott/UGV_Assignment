@@ -40,9 +40,11 @@ int main() {
 		prevCounter = Counter;
 		QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
 
-		LM->getData();
-		Console::WriteLine("Got Laser Data");
-		LM->sendDataToSharedMemory();
+		if (LM->getData() == SUCCESS) {
+			LM->sendDataToSharedMemory();
+		} else {
+			Console::WriteLine("Failed to get data from Laser module.");
+		}
 
 		if (LM->getHeartbeat()) {
 			// Get process management down time in seconds
