@@ -21,8 +21,8 @@ public:
 	void setShutdown(bool shutdown);
 	~PM_Module();
 protected:
-	array<String^>^ ModuleList;
-	array<int>^ MaxWait;
-	array<int>^ Critical;
-	array<System::Diagnostics::Process^>^ ProcessList;
+	array<String^>^ ModuleList;						   // List of module executable file names
+	array<int>^ MaxWait;							   // List of maximum wait times in seconds for each module
+	array<int>^ Critical;							   // List of critical modules (0: non-critical, 1: critical)
+	array<System::Diagnostics::Process^>^ ProcessList; // List of running module processes
 };

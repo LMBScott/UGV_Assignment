@@ -38,7 +38,6 @@
 #include "Messages.hpp"
 #include "HUD.hpp"
 
-#include "SMStructs.h"
 #include "SMFcn.h"
 #include "SMObject.h"
 #include "Display.hpp"
@@ -109,38 +108,29 @@ int main(int argc, char ** argv) {
 	glutPassiveMotionFunc(motion);
 
 	srand(time(NULL));
-
+	
+	// Set up PM module shared memory
 	PMObj = new SMObject(TEXT("ProcessManagement"), sizeof(ProcessManagement));
 
 	PMObj->SMAccess();
 
 	PMData = (ProcessManagement*)PMObj->pData;
 
+	// Set up Laser module shared memory
 	SMObject *LMObj = new SMObject(TEXT("SM_Laser"), sizeof(SM_Laser));
 
 	LMObj->SMAccess();
 
 	LMData = (SM_Laser *)LMObj->pData;
 
-	//LMData->numPoints = STANDARD_LASER_LENGTH;
-
-	/*for (int i = 0; i < LMData->numPoints; i++) {
-		double dist = rand() % 5000 + 1;
-		double angle = i * 0.5;
-		LMData->x[i] = dist * cos(angle * 3.14159235 / 180);
-		LMData->y[i] = dist * sin(angle * 3.14159235 / 180);
-	}*/
-
+	// Set up GPS module shared memory
 	SMObject* GPSObj = new SMObject(TEXT("SM_GPS"), sizeof(SM_GPS));
 
 	GPSObj->SMAccess();
 
 	GPSData = (SM_GPS *)GPSObj->pData;
-
-	//GPSData->Northing = 1.0;
-	//GPSData->Easting = 2.0;
-	//GPSData->Height = 3.0;
-
+	
+	// Set up VC module OpenGL object and shared memory
 	vehicle = new MyVehicle(LMData, GPSData);
 
 	SMObject* VCObj = new SMObject(TEXT("SM_VehicleControl"), sizeof(SM_VehicleControl));
@@ -149,7 +139,8 @@ int main(int argc, char ** argv) {
 	VCObj->SMAccess();
 
 	VCData = (SM_VehicleControl *)VCObj->pData;
-
+	
+	// Set up timing parameters
 	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
 	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
 
@@ -158,7 +149,7 @@ int main(int argc, char ** argv) {
 	PMDownCycles = 0;
 
 	glutMainLoop();
-
+	
 	if (vehicle != NULL) {
 		delete vehicle;
 	}
@@ -228,25 +219,29 @@ double getTime()
 }
 
 void idle() {
+	// Keep track of previous iteration's counter value to enable calculation of the time delta
 	prevCounter = Counter;
 	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
 
-	if (PMData->Heartbeat.Flags.OpenGL) {
+	if (PMData->Heartbeat.Flags.OpenGL) { // Check if heartbeat bit has not been return to 0 by PM module
+		// If yes, PM is unresponsive
 		// Get process management down time in seconds
 		__int64 PMLifeTime = PMDownCycles / Frequency;
 
 		if (PMLifeTime >= MAX_PM_WAIT) { // Check if proc. man. has been unresponsive for too long
 			exit(0);
 		}
-
+		
+		// Track PM module down time in performance counter ticks
 		PMDownCycles += Counter - prevCounter;
 	}
 	else {
+		// Process management is operating normally, set heartbeat bit to 1
 		PMData->Heartbeat.Flags.OpenGL = 1;
-		PMDownCycles = 0;
+		PMDownCycles = 0; // Reset PM module down cycle counter
 	}
 
-	if (PMData->Shutdown.Flags.OpenGL) {
+	if (PMData->Shutdown.Flags.OpenGL) { // Check if PM module has instructed module to shut down
 		exit(0);
 	}
 
@@ -308,8 +303,8 @@ void idle() {
 		vehicle->update(speed, steering, elapsedTime);
 	}
 	
-	VCData->Speed = speed;
-	VCData->Steering = steering;
+	VCData->Speed = speed; // Pass current speed to shared memory
+	VCData->Steering = steering; // Pass current steering parameter to shared memory
 
 	display();
 

@@ -84,25 +84,29 @@ void display()
 }
 void idle()
 {
-	prevCounter = Counter;
+	// Keep track of previous iteration's counter value to enable calculation of the time delta
+	prevCounter = Counter; 
 	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
 
-	if (PMData->Heartbeat.Flags.Camera) {
+	if (PMData->Heartbeat.Flags.Camera) { // Check if heartbeat bit has not been return to 0 by PM module
+		// If yes, PM is unresponsive
 		// Get process management down time in seconds
 		__int64 PMLifeTime = PMDownCycles / Frequency;
 
 		if (PMLifeTime >= MAX_PM_WAIT) { // Check if proc. man. has been unresponsive for too long
 			exit(0);
 		}
-
-		PMDownCycles += Counter - prevCounter;
+		
+		// Track PM module down time in performance counter ticks
+		PMDownCycles += Counter - prevCounter; 
 	}
 	else {
+		// Process management is operating normally, set heartbeat bit to 1
 		PMData->Heartbeat.Flags.Camera = 1;
-		PMDownCycles = 0;
+		PMDownCycles = 0; // Reset PM module down cycle counter
 	}
 
-	if (PMData->Shutdown.Flags.Camera) {
+	if (PMData->Shutdown.Flags.Camera) { // Check if PM module has instructed module to shut down
 		exit(0);
 	}
 

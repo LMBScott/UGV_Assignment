@@ -26,6 +26,7 @@ int main() {
 
 	Console::WriteLine("Connected to GPS Server.");
 
+	// Set up timing parameters
 	__int64 Frequency, Counter, prevCounter;
 
 	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
@@ -35,11 +36,14 @@ int main() {
 	long int PMDownCycles = 0;
 
 	while (!_kbhit()) {
+		// Keep track of previous iteration's counter value to enable calculation of the time delta
 		prevCounter = Counter;
 		QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
 		
 		if (GM->getData() == SUCCESS) {
+			// Only attempt to process data if data was received
 			if (GM->checkData()) {
+				// Verify that data is in valid format and expected quantity
 				Console::WriteLine("Data received, CRC values matched, sending data to shared memory.");
 				GM->sendDataToSharedMemory();
 			}
@@ -50,24 +54,26 @@ int main() {
 			Console::WriteLine("Failed to get data from GPS module.");
 		}
 
-		if (GM->getHeartbeat()) {
+		if (GM->getHeartbeat()) { // Check if heartbeat bit has not been return to 0 by PM module
 			// Get process management down time in seconds
 			long int PMLifeTime = PMDownCycles / (double)Frequency;
 
 			if (PMLifeTime >= MAX_PM_WAIT) { // Check if proc. man. has been unresponsive for too long
 				break;
 			}
-
+			
+			// Track PM module down time in performance counter ticks
 			PMDownCycles += Counter - prevCounter;
 		}
 		else {
+			// Process management is operating normally, set heartbeat bit to 1
 			GM->setHeartbeat(true);
-			PMDownCycles = 0;
+			PMDownCycles = 0; // Reset PM module down cycle counter
 		}
 
 		Thread::Sleep(25);
 
-		if (GM->getShutdownFlag()) {
+		if (GM->getShutdownFlag()) { // Check if PM module has instructed module to shut down
 			break;
 		}
 	}

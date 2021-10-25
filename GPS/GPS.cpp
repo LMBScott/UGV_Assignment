@@ -1,7 +1,5 @@
 #using <System.dll>
 #include "GPS.hpp"
-#include <SMObject.h>
-#include <smstructs.h>
 
 using namespace System::Threading;
 
@@ -53,26 +51,29 @@ int GPS::getData()
 
 	// Read the incoming data
 	Stream->Read(ReadData, 0, ReadData->Length);
-
+	
+	// Scan ReadData for a GPS data block header
 	unsigned int Header = 0;
 	int i = 0;
 	do {
 		unsigned char Data = ReadData[i++];
-		Header = ((Header << 8) | Data);
-	} while (Header != GPS_HEADER);
+		Header = ((Header << 8) | Data); // Collect next byte of data
+	} while (Header != GPS_HEADER); // Compare current 4-byte section with expected header
 
-	dataStartIndex = i - 4;
+	dataStartIndex = i - 4; // Start of data block is 4 bytes before current position
 
 	Console::WriteLine("GPS data header found at index {0, 3:N} (Value: {1, 12:N} / Expected: {2, 12:N})", dataStartIndex, Header, GPS_HEADER);
 
 	return SUCCESS;
 }
 
+// Pack raw GPS data into a GPS_Data_Struct object to enable data validation and transfer
 GPS_Data_Struct GPS::packData() {
 	GPS_Data_Struct readStruct = { 0 };
 	unsigned char* BytePtr = (unsigned char*)&readStruct;
-
-	for (int i = 0; i < GPS_DATA_LENGTH; i++) {
+	
+	// Set each byte of the struct to the corresponding byte of raw data
+	for (int i = 0; i < GPS_DATA_LENGTH; i++) { 
 		*(BytePtr + i) = ReadData[dataStartIndex + i];
 	}
 
@@ -82,7 +83,6 @@ GPS_Data_Struct GPS::packData() {
 int GPS::checkData()
 {
 	// Verify that CRC checksum matches expected value
-
 	// Get data block as char array
 	unsigned char dataBlock[GPS_DATA_LENGTH] = {};
 	
@@ -110,7 +110,8 @@ int GPS::sendDataToSharedMemory()
 	SM_GPS* GPSData = (SM_GPS*)SensorData;
 
 	GPS_Data_Struct GPSDataStruct = packData();
-
+	
+	// Transfer struct-packed data to shared memory for use by Display module
 	GPSData->Northing = GPSDataStruct.Northing;
 	GPSData->Easting = GPSDataStruct.Easting;
 	GPSData->Height = GPSDataStruct.Height;

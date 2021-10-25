@@ -8,7 +8,6 @@
 using namespace System::Diagnostics;
 
 int PM_Module::connect(String^ hostName, int portNumber) {
-
 	return SUCCESS;
 }
 
@@ -26,7 +25,7 @@ int PM_Module::setupSharedMemory() {
 }
 
 int PM_Module::setupDataStructures() {
-	ModuleList = gcnew array<String^> { "Laser_LScott", "VehicleControl_z5207471", "GPS_z5207471", "Display_LScott", "Camera_z5207471" };
+	ModuleList = gcnew array<String^> { "Laser_z5207471", "VehicleControl_z5207471", "GPS_z5207471", "Display_z5207471", "Camera_z5207471" };
 	MaxWait = gcnew array<int>(ModuleList->Length) { 5, 5, 5, 5, 5 };
 	Critical = gcnew array<int>(ModuleList->Length) { 0, 0, 0, 0, 0 };
 	ProcessList = gcnew array<Process^>(ModuleList->Length);
@@ -86,21 +85,26 @@ bool PM_Module::getHeartbeat() {
 
 int PM_Module::checkHeartbeats(__int64 Counter, __int64 prevCounter, __int64 Frequency) {
 	ProcessManagement* PMData = (ProcessManagement*)ProcessManagementData;
-
+	
+	// Iterate through all modules and verify their responsiveness based on heartbeats
 	for (int i = 1; i <= ModuleList->Length; i++) {
+		// Module heartbeat should be 1 if responsive
 		if ((PMData->Heartbeat.Status >> i) & 1) {
+			// Module is responsive, reset heartbeat to 0
 			PMData->Heartbeat.Status &= ~(1 << i);
-			PMData->LifeCounters[i - 1] = 0;
-		}
-		else {
+			PMData->LifeCounters[i - 1] = 0; // Reset module lifecounter
+		} else {
+			// Calculate module down time in seconds
 			double downTime = PMData->LifeCounters[i - 1] / Frequency;
 
 			if (downTime >= MaxWait[i - 1]) {
+				// Module has been unresponsive for too long
 				if (Critical[i - 1]) {
+					// If module was critical, shut down all modules
 					PMData->Shutdown.Status = 0xFF;
 				}
 				else if (ProcessList[i-1] != nullptr && ProcessList[i - 1]->HasExited) {
-					//ProcessList[i-1]->Kill();
+					// If module was non-critical, attempt to restart it
 					ProcessList[i - 1]->Start();
 					PMData->LifeCounters[i - 1] = 0;
 				}
@@ -108,7 +112,8 @@ int PM_Module::checkHeartbeats(__int64 Counter, __int64 prevCounter, __int64 Fre
 
 			Console::Write(ModuleList[i-1] + " Module's heartbeat is lost! ");
 			std::cout << "LifeCounter:" << PMData->LifeCounters[i - 1] << "Downtime: " << downTime << "s." << "Critical ? : " << (bool)Critical[i - 1] << std::endl;
-
+			
+			// Increment module life counter
 			PMData->LifeCounters[i - 1] += Counter - prevCounter;
 		}
 	}
@@ -122,7 +127,5 @@ void PM_Module::setShutdown(bool shutdown) {
 }
 
 PM_Module::~PM_Module() {
-	Stream->Close();
-	Client->Close();
 	delete ProcessManagementData;
 }

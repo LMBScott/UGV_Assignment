@@ -28,6 +28,7 @@ int main() {
 
 	Console::WriteLine("Connected to Laser Server.");
 
+	// Set up timing parameters
 	__int64 Frequency, Counter, prevCounter;
 
 	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
@@ -37,32 +38,36 @@ int main() {
 	long int PMDownCycles = 0;
 
 	while (!_kbhit()) {
+		// Keep track of previous iteration's counter value to enable calculation of the time delta
 		prevCounter = Counter;
 		QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
-
+		
+		// Only attempt to process data if data was received
 		if (LM->getData() == SUCCESS) {
 			LM->sendDataToSharedMemory();
 		} else {
 			Console::WriteLine("Failed to get data from Laser module.");
 		}
 
-		if (LM->getHeartbeat()) {
+		if (LM->getHeartbeat()) { // Check if heartbeat bit has not been return to 0 by PM module
 			// Get process management down time in seconds
 			long int PMLifeTime = PMDownCycles / (double)Frequency;
 
 			if (PMLifeTime >= MAX_PM_WAIT) { // Check if proc. man. has been unresponsive for too long
 				break;
 			}
-
+			
+			// Track PM module down time in performance counter ticks
 			PMDownCycles += Counter - prevCounter;
 		} else {
+			// Process management is operating normally, set heartbeat bit to 1
 			LM->setHeartbeat(true);
-			PMDownCycles = 0;
+			PMDownCycles = 0; // Reset PM module down cycle counter
 		}
 
 		Thread::Sleep(25);
 
-		if (LM->getShutdownFlag()) {
+		if (LM->getShutdownFlag()) { // Check if PM module has instructed module to shut down
 			break;
 		}
 	}

@@ -37,12 +37,6 @@ int VehicleControl::connect(String^ hostName, int portNumber) {
 	
 	Console::WriteLine("Awaiting authorisation response...");
 
-	//do { // Wait for authorisation response
-	//	System::Threading::Thread::Sleep(20);
-	//	Stream->Read(ReadData, 0, ReadData->Length);
-	//	ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
-	//} while (ResponseData != AUTH_OUTPUT);
-
 	while (!Stream->DataAvailable) { // Await authorisation response
 		System::Threading::Thread::Sleep(10);
 	}
@@ -120,8 +114,8 @@ bool VehicleControl::getHeartbeat() {
 }
 
 VehicleControl::~VehicleControl() {
-	//Stream->Close();
-	//Client->Close();
+	Stream->Close();
+	Client->Close();
 	delete ProcessManagementData;
 	delete SensorData;
 }

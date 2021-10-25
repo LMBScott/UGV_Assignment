@@ -29,6 +29,7 @@ int main() {
 
 	Console::WriteLine("Connected to VC Server.");
 
+	// Set up timing parameters
 	__int64 Frequency, Counter, prevCounter;
 
 	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
@@ -38,27 +39,30 @@ int main() {
 	long int PMDownCycles = 0;
 
 	while (!_kbhit()) {
+		// Keep track of previous iteration's counter value to enable calculation of the time delta
 		prevCounter = Counter;
 		QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
 		
 		VC->sendSteeringData();
 
-		if (VC->getHeartbeat()) {
+		if (VC->getHeartbeat()) { // Check if heartbeat bit has not been return to 0 by PM module
 			// Get process management down time in seconds
 			long int PMLifeTime = PMDownCycles / (double)Frequency;
 
 			if (PMLifeTime >= MAX_PM_WAIT) { // Check if proc. man. has been unresponsive for too long
 				break;
 			}
-
+			
+			// Track PM module down time in performance counter ticks
 			PMDownCycles += Counter - prevCounter;
 		}
 		else {
+			// Process management is operating normally, set heartbeat bit to 1
 			VC->setHeartbeat(true);
-			PMDownCycles = 0;
+			PMDownCycles = 0; // Reset PM module down cycle counter
 		}
 
-		if (VC->getShutdownFlag()) {
+		if (VC->getShutdownFlag()) { // Check if PM module has instructed module to shut down
 			break;
 		}
 

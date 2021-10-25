@@ -1,10 +1,8 @@
 #pragma once
 
+#include <SMObject.h>
+#include <smstructs.h>
 #include <UGV_module.h>
-
-struct LaserData {
-
-};
 
 ref class Laser : public UGV_module {
 public:

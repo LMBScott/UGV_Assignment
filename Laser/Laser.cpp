@@ -1,20 +1,17 @@
 #include "Laser.hpp"
-#include <SMObject.h>
-#include <smstructs.h>
 #include <string.h>
 
 #using <mscorlib.dll>
 
-#define AUTH_INPUT "z5207471\n"
-#define AUTH_OUTPUT "OK\n"
+#define AUTH_INPUT "z5207471\n" // Input sent to Laser hardware for authorisation  
 
 #define START_ANGLE_INDEX 23
 #define RESOLUTION_INDEX 24
 #define NUM_POINTS_INDEX 25
 #define DATA_START_INDEX 26
 
-#define ANGLE_DIVISION 10000
-#define PI 3.1415926536
+#define ANGLE_DIVISION 10000 // Divisor of whole degrees use for angle measurements in laser data block
+#define PI 3.1415926536      // Ratio of a circle's circumference to its diameter
 
 int Laser::connect(String^ hostName, int portNumber) {
 	// Creat TcpClient object and connect to it
@@ -44,22 +41,18 @@ int Laser::connect(String^ hostName, int portNumber) {
 	String^ ResponseData;
 
 	Console::WriteLine("Awaiting authorisation response...");
-
-	//do { // Wait for authorisation response
-	//	System::Threading::Thread::Sleep(20);
-	//	Stream->Read(ReadData, 0, ReadData->Length);
-	//	ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
-	//} while (ResponseData != AUTH_OUTPUT);
 	
 	while (!Stream->DataAvailable) { // Await authorisation response
 		System::Threading::Thread::Sleep(10);
 	}
 	
+	// Output authorisation response
 	Stream->Read(ReadData, 0, ReadData->Length);
 	ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
 
 	Console::WriteLine("Got response: {0}", ResponseData);
 
+	// Prepare data request string for use with getData() function
 	String^ AskScan = gcnew String("sRN LMDscandata");
 	SendData = Text::Encoding::ASCII->GetBytes(AskScan);
 	
@@ -104,7 +97,7 @@ int Laser::getData() {
 int Laser::checkData() {
 	SM_Laser* LData = (SM_Laser*)SensorData;
 
-	if (LData != NULL) {
+	if (LData != NULL) { // Number of points should be 361 (STANDARD_LASER_LENGTH)
 		return (int)(numPointsRead == STANDARD_LASER_LENGTH);
 	}
 
@@ -112,16 +105,16 @@ int Laser::checkData() {
 }
 
 int Laser::sendDataToSharedMemory() {
+	// Convert ReadData to string array, items delineated by spaces
 	array<wchar_t>^ Sep = { ' ' };
 	array <String^>^ ResponseData = System::Text::Encoding::ASCII->GetString(ReadData)->Split(Sep, System::StringSplitOptions::None);
 
 	SM_Laser* LData = (SM_Laser*)SensorData;
 
 	try {
+		// Transfer data from string array to shared memory object
 		double StartAngle = System::Convert::ToInt32(ResponseData[START_ANGLE_INDEX], 16) / (double)ANGLE_DIVISION;
-		//Console::WriteLine("Start angle:" + StartAngle);
 		double Resolution = System::Convert::ToInt32(ResponseData[RESOLUTION_INDEX], 16) / (double)ANGLE_DIVISION;
-		//Console::WriteLine("Resolution:" + Resolution);
 		int NumPoints = System::Convert::ToInt32(ResponseData[NUM_POINTS_INDEX], 16);
 
 		numPointsRead = NumPoints;
@@ -141,6 +134,8 @@ int Laser::sendDataToSharedMemory() {
 			}
 		}
 	} catch (System::FormatException^ e) {
+		// Some data packets are of an invalid format,
+		// Usually when a previous getData() call failed to retrieve data
 		Console::WriteLine("Data stream was in incorrect format");
 		return ERR_INVALID_DATA;
 	}
